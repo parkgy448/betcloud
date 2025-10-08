@@ -142,7 +142,7 @@
                 <span class="text-xs">미니게임</span>
             </div>
             <!-- Row 3 -->
-            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('casino')">
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardMoneyTransfer()">
                 <i data-feather="layers" class="w-8 h-8 mb-2"></i>
                 <span class="text-xs">카지노</span>
             </div>
@@ -168,7 +168,7 @@
                     <a href="#" class="text-xs text-gray-400">+MORE</a>
                 </div>
                 <hr class="border-t-2 border-orange-500 mb-2">
-                <ul class="space-y-2 text-sm">
+                <ul id="announcements-list" class="space-y-2 text-sm">
                     <li class="flex items-start gap-2">
                         <span class="text-yellow-300 text-xs font-semibold">RULE -</span>
                         <span class="flex-1 text-gray-100">★자주묻는질문★</span>
@@ -203,7 +203,7 @@
                     <a href="#" class="text-xs text-gray-400">+MORE</a>
                 </div>
                 <hr class="border-t-2 border-orange-500 mb-2">
-                <ul class="space-y-2 text-sm">
+                <ul id="events-list" class="space-y-2 text-sm">
                     <li class="flex items-start gap-2">
                         <span class="text-green-300 text-xs font-semibold">EVENT -</span>
                         <span class="flex-1 text-gray-100">★추석이벤트★</span>
@@ -416,9 +416,9 @@
                         
                         <div class="w-full md:w-auto mt-4 md:mt-0">
                             <div class="grid grid-cols-3 gap-2 w-full">
-                                <button onclick="openModal('loginModal')" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-orange-500 to-amber-500">Login</button>
-                                <button onclick="openModal('registerModal')" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-amber-400 to-yellow-500">Sign Up</button>
-                                <button class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-emerald-400 to-green-500">Anonymous</button>
+                                <button onclick="openModal('loginModal')" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-orange-500 to-amber-500">로그인</button>
+                                <button onclick="openModal('registerModal')" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-amber-400 to-yellow-500">회원가입</button>
+                                <button class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-emerald-400 to-green-500">무기명가입</button>
                             </div>
                         </div>
                     </div>
@@ -571,5 +571,134 @@
         feather.replace();
         updateAuthUI(auth.currentUser);
     </script>
+
+
+<!-- BEGIN: Live Announcements & Events (Firestore) -->
+<script>
+/*
+  Live-only Announcements & Events (Firestore)
+  - Requires firebase initialized globally.
+  - Listens in real-time and updates the page when admin edits collections.
+*/
+
+function makeItemRow(prefix, title) {
+  const li = document.createElement('li');
+  li.className = 'flex items-start gap-2';
+  const tag = document.createElement('span');
+  tag.className = prefix.includes("EVENT") ? 'text-green-300 text-xs font-semibold' : 'text-yellow-300 text-xs font-semibold';
+  tag.innerText = prefix + ' -';
+  const txt = document.createElement('span');
+  txt.className = 'flex-1 text-gray-100';
+  txt.innerText = title;
+  li.appendChild(tag);
+  li.appendChild(txt);
+  return li;
+}
+
+function attachLiveNotices() {
+  const db = firebase.firestore();
+  const annContainer = document.querySelector('#announcements-list');
+  const evtContainer = document.querySelector('#events-list');
+
+  if (!annContainer || !evtContainer) return;
+
+  // real-time listeners (ordered by 'order' then createdAt)
+  db.collection('announcements').where('active','==', true).orderBy('order','asc').onSnapshot((snap) => {
+    annContainer.innerHTML = '';
+    snap.forEach(doc => {
+      const data = doc.data();
+      const title = data.title || '';
+      annContainer.appendChild(makeItemRow('RULE', title));
+    });
+  }, (err) => console.error('ann listener err', err));
+
+  db.collection('events').where('active','==', true).orderBy('order','asc').onSnapshot((snap) => {
+    evtContainer.innerHTML = '';
+    snap.forEach(doc => {
+      const data = doc.data();
+      const title = data.title || '';
+      evtContainer.appendChild(makeItemRow('EVENT', title));
+    });
+  }, (err) => console.error('evt listener err', err));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.firebase && firebase.firestore) {
+    attachLiveNotices();
+  } else {
+    console.warn('Firebase not initialized before live notices script.');
+  }
+});
+</script>
+<!-- END: Live Announcements & Events (Firestore) -->
+
+
+
+<script>
+
+// Guard function for Casino / Money Transfer access
+function guardMoneyTransfer() {
+    // Helper to open login modal if available, else redirect to login page
+    function openLoginUI() {
+        if (typeof openModal === 'function') {
+            try { openModal('loginModal'); return; } catch(e) {}
+        }
+        if (typeof showLoginModal === 'function') {
+            try { showLoginModal(); return; } catch(e) {}
+        }
+        // fallback: redirect to login page
+        window.location.href = 'login.html';
+    }
+
+    // Try Firebase auth if available
+    try {
+        if (typeof auth !== 'undefined' && auth && auth.currentUser) {
+            var user = auth.currentUser;
+            // check firestore if available
+            if (typeof db !== 'undefined' && db) {
+                db.collection("users").doc(user.uid).get()
+                .then((doc) => {
+                    if (!doc.exists) {
+                        // Not in firestore: sign out and prompt login
+                        if (typeof auth.signOut === 'function') auth.signOut().catch(()=>{});
+                        openLoginUI();
+                        return;
+                    }
+                    var userData = doc.data();
+                    if (userData && userData.status && userData.status !== 'active') {
+                        alert('승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.');
+                        return;
+                    }
+                    // All good - go to transfer page
+                    window.location.href = 'transfer.html';
+                })
+                .catch((err) => {
+                    console.error('guardMoneyTransfer firestore error:', err);
+                    alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                });
+            } else {
+                // No firestore - assume authenticated user can proceed
+                window.location.href = 'transfer.html';
+            }
+            return;
+        }
+    } catch(e) {
+        console.warn('guardMoneyTransfer auth check failed', e);
+    }
+
+    // If no Firebase auth, try simple local login flag (app may set this)
+    try {
+        if (window.isLoggedIn === true || localStorage.getItem('userLoggedIn') === 'true') {
+            // proceed
+            window.location.href = 'transfer.html';
+            return;
+        }
+    } catch(e) {}
+
+    // Default: open login modal / redirect
+    openLoginUI();
+}
+
+</script>
 </body>
 </html>
