@@ -1,0 +1,513 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetCloud Revolution | Turbo Betting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
+    
+    <!-- Firebase and dependencies -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+    <script src="auth.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Oxanium', sans-serif;
+            background-color: #0a0a12;
+            color: white;
+        }
+        .glow-orange {
+            box-shadow: 0 0 15px rgba(255,102,0,0.7);
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="vanta-bg" class="fixed inset-0 z-0"></div>
+    
+    <div class="relative z-10 container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center">
+                <i data-feather="cloud" class="text-orange-500 mr-2"></i>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent">
+                    BETCLOUD
+                </h1>
+                <span class="ml-2 text-xs text-gray-400">SINCE 2016</span>
+            </div>
+            <div class="flex space-x-2">
+                <button class="px-3 py-1 bg-gray-800 rounded-md text-xs flex items-center">
+                    <i data-feather="globe" class="w-3 h-3 mr-1"></i>
+                    KR
+                </button>
+            </div>
+        </header>
+
+        <!-- User Info - Dynamic based on login status -->
+        <div id="userInfoSection" class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-4 mb-6">
+            <!-- Will be populated by JavaScript -->
+        </div>
+
+        <!-- Promo Banner -->
+        <div class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-4 mb-6 relative overflow-hidden pulse">
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-black/30 to-transparent"></div>
+            <div class="relative z-10">
+                <h2 class="text-lg font-bold mb-1">최고의 스포츠 & 카지노</h2>
+                <p class="text-sm text-gray-300 mb-3">클라우드에서 승리를 경험하세요!</p>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <i data-feather="dollar-sign" class="text-orange-400 w-4 h-4 mr-2"></i>
+                        <span class="text-xs">주간 캐쉬백 최대 2백만원</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i data-feather="refresh-cw" class="text-green-400 w-4 h-4 mr-2"></i>
+                        <span class="text-xs">최대 11% 스포츠/카지노 롤백</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i data-feather="award" class="text-yellow-400 w-4 h-4 mr-2"></i>
+                        <span class="text-xs">최대 4% 슬롯 롤백</span>
+                    </div>
+                </div>
+            </div>
+            <img src="http://static.photos/sport/640x360/42" alt="Sports" class="absolute right-0 top-0 h-full opacity-40">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-3 gap-2 mb-4">
+            <a href="deposit.html" class="bg-gray-800/70 hover:bg-gray-700 transition py-3 rounded-md flex flex-col items-center">
+                <i data-feather="dollar-sign" class="text-green-400 mb-1"></i>
+                <span class="text-xs">입금</span>
+            </a>
+            <a href="exchange.html" class="bg-gray-800/70 hover:bg-gray-700 transition py-3 rounded-lg flex flex-col items-center">
+                <i data-feather="credit-card" class="text-blue-400 mb-1"></i>
+                <span class="text-xs">환전</span>
+            </a>
+            <a href="transfer.html" class="bg-gray-800/70 hover:bg-gray-700 transition py-3 rounded-lg flex flex-col items-center">
+                <i data-feather="repeat" class="text-purple-400 mb-1"></i>
+                <span class="text-xs">이체</span>
+            </a>
+            <button class="bg-gray-800/70 hover:bg-gray-700 transition py-3 rounded-lg flex flex-col items-center" onclick="showUnderMaintenance()">
+                <i data-feather="message-square" class="text-yellow-400 mb-1"></i>
+                <span class="text-xs">투표</span>
+            </button>
+            <a href="fortune.html" class="bg-gray-800/70 hover:bg-gray-700 transition py-3 rounded-lg flex flex-col items-center">
+                <i data-feather="star" class="text-pink-400 mb-1"></i>
+                <span class="text-xs">포춘</span>
+            </a>
+            <a href="roulette.html" class="bg-gray-800/70 hover:bg-gray-700 transition py-3 rounded-lg flex flex-col items-center">
+                <i data-feather="rotate-cw" class="text-red-400 mb-1"></i>
+                <span class="text-xs">룰렛</span>
+            </a>
+        </div>
+
+        <!-- Game Grid -->
+        <div class="grid grid-cols-3 gap-2 mb-6">
+            <!-- Row 1 -->
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-md aspect-square flex flex-col items-center justify-center relative" onclick="guardGameAccess('sports')">
+                <i data-feather="flag" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">스포츠</span>
+            </div>
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('special')">
+                <i data-feather="award" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">스페셜</span>
+            </div>
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('live')">
+                <i data-feather="tv" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">라이브</span>
+            </div>
+            <!-- Row 2 -->
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('inplay')">
+                <i data-feather="play" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">인플레이</span>
+            </div>
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('esports')">
+                <i data-feather="headphones" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">E-스포츠</span>
+            </div>
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('minigame')">
+                <i data-feather="package" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">미니게임</span>
+            </div>
+            <!-- Row 3 -->
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('casino')">
+                <i data-feather="layers" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">카지노</span>
+            </div>
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('slot')">
+                <i data-feather="codesandbox" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">슬롯</span>
+            </div>
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center relative" onclick="guardGameAccess('revolution')">
+                <i data-feather="refresh-cw" class="w-8 h-8 mb-2"></i>
+                <span class="text-xs">리볼루션</span>
+                <div class="absolute bottom-1 right-1 bg-green-500 rounded-full p-1">
+                    <i data-feather="message-circle" class="w-3 h-3"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="bg-gray-800/70 rounded-md p-3 mb-3">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold">공지사항</h3>
+                <a href="#" class="text-xs text-gray-400">+MORE</a>
+            </div>
+            <div class="text-sm">
+                RIL F - ★FAQ★
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-xs text-gray-500 mt-6">
+            <p>© 2023 BETCLOUD REVOLUTION</p>
+            <p class="mt-1">bc-mvp.com</p>
+        </footer>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">로그인</h3>
+                <button onclick="closeModal('loginModal')" class="text-gray-400 hover:text-white">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="loginId" class="w-full bg-gray-700 rounded p-3" placeholder="아이디">
+                <input type="password" id="loginPassword" class="w-full bg-gray-700 rounded p-3" placeholder="비밀번호">
+                <button id="loginSubmit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-bold">
+                    로그인
+                </button>
+                <div class="text-center">
+                    <button onclick="closeModal('loginModal'); openModal('registerModal')" class="text-orange-400 hover:text-orange-300 text-sm">
+                        회원가입
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">회원가입</h3>
+                <button onclick="closeModal('registerModal')" class="text-gray-400 hover:text-white">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="regId" class="w-full bg-gray-700 rounded p-3" placeholder="아이디">
+                <input type="password" id="regPassword" class="w-full bg-gray-700 rounded p-3" placeholder="비밀번호">
+                <input type="password" id="regPasswordConfirm" class="w-full bg-gray-700 rounded p-3" placeholder="비밀번호 확인">
+                <input type="text" id="regName" class="w-full bg-gray-700 rounded p-3" placeholder="이름">
+                <select id="regBank" class="w-full bg-gray-700 rounded p-3">
+                    <option value="">은행 선택</option>
+                    <option value="kb">국민은행</option>
+                    <option value="shinhan">신한은행</option>
+                    <option value="woori">우리은행</option>
+                    <option value="hana">하나은행</option>
+                </select>
+                <input type="text" id="regAccount" class="w-full bg-gray-700 rounded p-3" placeholder="계좌번호">
+                <input type="text" id="regAccountName" class="w-full bg-gray-700 rounded p-3" placeholder="예금주">
+                <input type="password" id="withdrawPassword" class="w-full bg-gray-700 rounded p-3" placeholder="출금 비밀번호">
+                <button id="registerSubmit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-bold">
+                    회원가입
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
+        <div class="bg-gray-800 rounded-lg p-6 flex items-center">
+            <i data-feather="loader" class="w-8 h-8 text-orange-500 animate-spin mr-3"></i>
+            <span>처리 중...</span>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+    apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
+    authDomain: "cloud-casino-34cc6.firebaseapp.com",
+    projectId: "cloud-casino-34cc6",
+    storageBucket: "cloud-casino-34cc6.firebasestorage.app",
+    messagingSenderId: "289867400095",
+    appId: "1:289867400095:web:c9060c2a534225db9cf3aa"
+  };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Vanta.js Background
+        VANTA.GLOBE({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0xff6600,
+            backgroundColor: 0x0a0a12,
+            size: 0.7
+        });
+
+        // Helper Functions
+        function showLoading() {
+            document.getElementById("loadingSpinner").classList.remove("hidden");
+        }
+
+        function hideLoading() {
+            document.getElementById("loadingSpinner").classList.add("hidden");
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove("hidden");
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add("hidden");
+        }
+
+        function showUnderMaintenance() {
+            alert("현재 점검 중입니다. 빠른 시일 내에 서비스가 재개될 예정입니다.");
+        }
+
+        function guardGameAccess(gameType) {
+            const user = auth.currentUser;
+            if (!user) {
+                openModal("loginModal");
+                return false;
+            }
+            
+            // Check if user is approved
+            db.collection("users").doc(user.uid).get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    if (userData.status !== "active") {
+                        alert("승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
+                        return false;
+                    }
+                    // Game access granted
+                    showUnderMaintenance(); // Temporary - replace with actual game navigation
+                }
+            });
+            return true;
+        }
+
+        // Update Auth UI
+        function updateAuthUI(user) {
+            const userInfoSection = document.getElementById("userInfoSection");
+            
+            if (user) {
+                // Get user data from Firestore
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        const isAdmin = (userData && (userData.role === "admin" || userData.isAdmin === true));
+                        userInfoSection.innerHTML = `
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <div class="flex items-center flex-wrap gap-2">
+                                        <h3 class="font-bold text-lg mr-2">${userData.name || userData.userId} 님</h3>
+                                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">${(userData.point || 0).toLocaleString()}P</span>
+                                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${(userData.balance || 0).toLocaleString()}원</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3 md:mt-0 flex space-x-2">
+                                    <a href="admin.html" ${isAdmin ? "" : "style=\"display:none;\""} class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-4 py-2 rounded-md font-bold glow-orange">관리자페이지</a>
+                                    <button onclick="logout()" class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-md font-bold glow-orange">로그아웃</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                userInfoSection.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h3 class="font-bold text-lg">BETCLOUD에 오신 것을 환영합니다</h3>
+                            <p class="text-sm text-gray-300 mt-1">로그인 후 모든 서비스를 이용하세요</p>
+                        </div>
+                        
+                        <div class="w-full md:w-auto mt-4 md:mt-0">
+                            <div class="grid grid-cols-3 gap-2 w-full">
+                                <button onclick="openModal('loginModal')" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-orange-500 to-amber-500">Login</button>
+                                <button onclick="openModal('registerModal')" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-amber-400 to-yellow-500">Sign Up</button>
+                                <button class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-emerald-400 to-green-500">Anonymous</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Login Function
+        document.getElementById("loginSubmit").addEventListener("click", async function () {
+            const userId = document.getElementById("loginId").value.trim();
+            const password = document.getElementById("loginPassword").value.trim();
+
+            if (!userId || !password) {
+                alert("아이디와 비밀번호를 입력해주세요.");
+                return;
+            }
+
+            showLoading();
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(`${userId}@betcloud.com`, password);
+                const userDoc = await db.collection("users").doc(userCredential.user.uid).get();
+                
+                if (!userDoc.exists) {
+                    await auth.signOut();
+                    alert("등록되지 않은 사용자입니다.");
+                    return;
+                }
+
+                const userData = userDoc.data();
+                if (userData.status !== "active") {
+                    await auth.signOut();
+                    alert("승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
+                    return;
+                }
+
+                updateAuthUI(userData);
+                closeModal("loginModal");
+                // 환영 알림은 auth.js 또는 상위 로직에서 처리하므로 중복 방지
+                // alert(`${userData.name || userData.userId}님, 환영합니다!`);
+            } catch (error) {
+                console.error("로그인 오류:", error);
+                let errorMessage = "로그인 중 오류가 발생했습니다.";
+                if (error.code === "auth/user-not-found") {
+                    errorMessage = "등록되지 않은 아이디입니다.";
+                } else if (error.code === "auth/wrong-password") {
+                    errorMessage = "비밀번호가 일치하지 않습니다.";
+                }
+                alert(errorMessage);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Register Function
+        document.getElementById("registerSubmit").addEventListener("click", async function () {
+            const userId = document.getElementById("regId").value.trim();
+            const password = document.getElementById("regPassword").value.trim();
+            const passwordConfirm = document.getElementById("regPasswordConfirm").value.trim();
+            const name = document.getElementById("regName").value.trim();
+            const bank = document.getElementById("regBank").value;
+            const account = document.getElementById("regAccount").value.trim();
+            const accountName = document.getElementById("regAccountName").value.trim();
+            const withdrawPassword = document.getElementById("withdrawPassword").value.trim();
+
+            if (!userId || !password || !passwordConfirm || !name || !bank || !account || !accountName || !withdrawPassword) {
+                alert("모든 필수 항목을 입력해주세요.");
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                alert("비밀번호가 일치하지 않습니다.");
+                return;
+            }
+
+            if (!bcrypt || typeof bcrypt.hashSync !== "function") {
+                alert("암호화 라이브러리가 로딩되지 않았습니다. 새로고침 후 다시 시도하세요.");
+                return;
+            }
+
+            let hashedWithdrawPassword;
+            try {
+                hashedWithdrawPassword = bcrypt.hashSync(withdrawPassword, 10);
+            } catch (err) {
+                alert("암호화 처리 중 오류가 발생했습니다.");
+                return;
+            }
+
+            showLoading();
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(`${userId}@betcloud.com`, password);
+                
+                const userData = {
+                    userId,
+                    name,
+                    bank,
+                    account,
+                    accountName,
+                    balance: 0,
+                    point: 0,
+                    joinDate: new Date().toISOString(),
+                    status: "pending",
+                    isAdmin: false,
+                    withdrawPassword: hashedWithdrawPassword,
+                };
+
+                await db.collection("users").doc(userCredential.user.uid).set(userData);
+                await db.collection("approvalRequests").add({
+                    userId: userCredential.user.uid,
+                    status: "pending",
+                    requestDate: new Date().toISOString(),
+                    userInfo: { name, userId, joinDate: userData.joinDate, bank, account, accountName }
+                });
+
+                await auth.signOut();
+                updateAuthUI(null);
+                closeModal("registerModal");
+                alert("회원가입 신청이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.");
+            } catch (error) {
+                console.error("회원가입 오류:", error);
+                alert("회원가입 중 오류가 발생했습니다: " + error.message);
+                try {
+                    await auth.signOut();
+                    updateAuthUI(null);
+                } catch (logoutError) {
+                    console.error("로그아웃 오류:", logoutError);
+                }
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Logout Function
+        async function logout() {
+            try {
+                await auth.signOut();
+                updateAuthUI(null);
+                alert("로그아웃 되었습니다.");
+            } catch (error) {
+                console.error("로그아웃 오류:", error);
+                alert("로그아웃 중 오류가 발생했습니다.");
+            }
+        }
+
+        // Auth State Listener
+        auth.onAuthStateChanged((user) => {
+            updateAuthUI(user);
+        });
+
+        // Initialize
+        feather.replace();
+        updateAuthUI(auth.currentUser);
+    </script>
+</body>
+</html>
