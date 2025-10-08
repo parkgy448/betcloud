@@ -1,33 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Deposit | BetCloud Revolution</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Firebase and dependencies -->
+
+    <!-- Firebase and dependencies (v8) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
     <script src="auth.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
-        body {
-            font-family: 'Oxanium', sans-serif;
-            background-color: #0a0a12;
-            color: white;
-        }
-        .active-tab {
-            background-color: #f97316;
-            color: white;
-        }
-        .amount-btn.active {
-            background-color: #f97316;
-            color: white;
-        }
+        body { font-family: 'Oxanium', sans-serif; background-color: #0a0a12; color: white; }
+        .active-tab { background-color: #f97316; color: white; }
+        .amount-btn.active { background-color: #f97316; color: white; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -36,20 +27,14 @@
         <header class="flex justify-between items-center mb-8">
             <div class="flex items-center">
                 <i data-feather="cloud" class="text-orange-500 mr-2"></i>
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent">
-                    BETCLOUD
-                </h1>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent">BETCLOUD</h1>
                 <span class="ml-2 text-xs text-gray-400">SINCE 2016</span>
             </div>
-            <a href="index.html" class="text-gray-400 hover:text-white">
-                <i data-feather="x"></i>
-            </a>
+            <a href="index.html" class="text-gray-400 hover:text-white"><i data-feather="x"></i></a>
         </header>
 
-        <!-- User Info - Dynamic -->
-        <div id="userInfoSection" class="bg-gray-800 rounded-lg p-4 mb-6">
-            <!-- Will be populated by JavaScript -->
-        </div>
+        <!-- User Info -->
+        <div id="userInfoSection" class="bg-gray-800 rounded-lg p-4 mb-6"></div>
 
         <!-- Tabs -->
         <div class="flex border-b border-gray-700 mb-6">
@@ -57,9 +42,8 @@
             <button id="historyTab" class="flex-1 py-2 font-bold text-gray-400">충전내역</button>
         </div>
 
-        <!-- Charge Request Tab -->
-        <div id="chargeRequestTab" class="charge-tab-content active">
-            <!-- Account Verification -->
+        <!-- Charge Request -->
+        <div id="chargeRequestTab" class="charge-tab-content">
             <div class="bg-gray-800 rounded-lg p-4 mb-6">
                 <h3 class="font-bold mb-4">충전계좌정보</h3>
                 <div class="space-y-4">
@@ -70,27 +54,22 @@
                             <i data-feather="eye" id="withdrawEyeIcon" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    
-                    <!-- Account Verification Section -->
+
                     <div class="bg-gray-900 rounded-lg p-4">
                         <h4 class="font-bold text-orange-400 mb-2">입금 계좌 확인</h4>
-                        <div id="accountResult" class="text-sm text-gray-300 mb-3">
-                            계좌확인을 위해 비밀번호를 입력해주세요
-                        </div>
+                        <div id="accountResult" class="text-sm text-gray-300 mb-3">계좌확인을 위해 비밀번호를 입력해주세요</div>
                         <div id="accountPwWrap" class="hidden">
                             <div class="flex space-x-2 mb-2">
                                 <input type="password" id="accountCheckPassword" class="flex-1 bg-gray-700 rounded p-2" placeholder="비밀번호 입력">
                                 <button id="accountPwConfirmBtn" class="bg-orange-500 hover:bg-orange-600 px-4 rounded">확인</button>
                             </div>
                         </div>
-                        <button id="verifyAccountBtn" class="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded">
-                            계좌 확인하기
-                        </button>
+                        <button id="verifyAccountBtn" class="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded">계좌 확인하기</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Deposit Amount -->
+            <!-- Amount -->
             <div class="bg-gray-800 rounded-lg p-4 mb-6">
                 <h3 class="font-bold mb-4">충전금액</h3>
                 <div class="mb-4">
@@ -107,7 +86,6 @@
                     </div>
                 </div>
 
-                <!-- Point Options -->
                 <div class="mb-4">
                     <h4 class="font-bold mb-3">포인트 옵션 선택</h4>
                     <div class="space-y-2">
@@ -135,18 +113,16 @@
                     </div>
                 </div>
 
-                <button id="submitChargeBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-bold">
-                    충전신청
-                </button>
+                <button id="submitChargeBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-bold">충전신청</button>
             </div>
         </div>
 
-        <!-- Charge History Tab -->
+        <!-- Charge History -->
         <div id="chargeHistoryTab" class="charge-tab-content hidden">
             <div class="bg-gray-800 rounded-lg p-4">
                 <h3 class="font-bold mb-4">충전 내역</h3>
                 <div id="chargeHistoryList" class="space-y-2">
-                    <!-- History will be populated by JavaScript -->
+                    <!-- populated by JS -->
                 </div>
             </div>
         </div>
@@ -155,93 +131,116 @@
         <div class="bg-gray-800 rounded-lg p-4 mb-6">
             <h3 class="font-bold mb-3 text-red-400">충전 전 필독사항</h3>
             <ul class="space-y-3 text-sm">
-                <li class="flex items-start">
-                    <i data-feather="alert-circle" class="text-orange-400 mr-2 w-4 h-4 mt-0.5"></i>
-                    <span>반드시 현재 계좌번호를 확인하세요. (변경 가능성 있음)</span>
-                </li>
-                <li class="flex items-start">
-                    <i data-feather="alert-circle" class="text-orange-400 mr-2 w-4 h-4 mt-0.5"></i>
-                    <span>무통장(카카오페이/토스뱅크/ATM) 입금 가능</span>
-                </li>
-                <li class="flex items-start">
-                    <i data-feather="alert-circle" class="text-orange-400 mr-2 w-4 h-4 mt-0.5"></i>
-                    <span>1회 최대 3,990,000원까지 가능 (초과시 분할입금 필수)</span>
-                </li>
-                <li class="flex items-start">
-                    <i data-feather="alert-circle" class="text-orange-400 mr-2 w-4 h-4 mt-0.5"></i>
-                    <span>본인명의 계좌에서 입금 가능 (타인명의도 가능)</span>
-                </li>
+                <li class="flex items-start"><i data-feather="alert-circle" class="text-orange-400 mr-2 w-4 h-4 mt-0.5"></i><span>반드시 현재 계좌번호를 확인하세요. (변경 가능성 있음)</span></li>
+                <li class="flex items-start"><i data-feather="alert-circle" class="text-orange-400 mr-2 w-4 h-4 mt-0.5"></i><span>무통장(카카오페이/토스뱅크/ATM) 입금 가능</span></li>
+                <li class="flex items-start"><i data-feather="alert-circle" class="text-orange-400 mr-2 w-4 h-4 mt-0.5"></i><span>1회 최대 3,990,000원까지 가능 (초과시 분할입금 필수)</span></li>
+                <li class="flex items-start"><i data-feather="alert-circle" class="text-orange-400 mr-2 w-4 h-4 mt-0.5"></i><span>본인명의 계좌에서 입금 가능 (타인명의도 가능)</span></li>
             </ul>
         </div>
 
-        <!-- Footer -->
-        <footer class="text-center text-xs text-gray-500 mt-6">
-            <p>COPYRIGHT © BETCLOUD ALL RIGHTS RESERVED</p>
-        </footer>
+        <footer class="text-center text-xs text-gray-500 mt-6"><p>COPYRIGHT © BETCLOUD ALL RIGHTS RESERVED</p></footer>
 
-        <!-- Support Button -->
-        <button class="fixed bottom-6 right-6 bg-orange-500 text-white p-3 rounded-full shadow-lg">
-            <i data-feather="message-square"></i>
-        </button>
+        <button class="fixed bottom-6 right-6 bg-orange-500 text-white p-3 rounded-full shadow-lg"><i data-feather="message-square"></i></button>
     </div>
 
-    <!-- Loading Spinner -->
+    <!-- Loading Spinner (custom text requested) -->
     <div id="loadingSpinner" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
         <div class="bg-gray-800 rounded-lg p-6 flex items-center">
             <i data-feather="loader" class="w-8 h-8 text-orange-500 animate-spin mr-3"></i>
-            <span>처리 중...</span>
+            <span id="loadingText">로딩중입니다......... 잠시만 기다려주세요.</span>
         </div>
     </div>
 
     <script>
-        // Firebase Configuration
+        // Firebase config (kept from original)
         const firebaseConfig = {
-    apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
-    authDomain: "cloud-casino-34cc6.firebaseapp.com",
-    projectId: "cloud-casino-34cc6",
-    storageBucket: "cloud-casino-34cc6.firebasestorage.app",
-    messagingSenderId: "289867400095",
-    appId: "1:289867400095:web:c9060c2a534225db9cf3aa"
-  };
+            apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
+            authDomain: "cloud-casino-34cc6.firebaseapp.com",
+            projectId: "cloud-casino-34cc6",
+            storageBucket: "cloud-casino-34cc6.firebasestorage.app",
+            messagingSenderId: "289867400095",
+            appId: "1:289867400095:web:c9060c2a534225db9cf3aa"
+        };
 
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
 
         let currentDepositAccount = "";
         let isAccountVerified = false;
+        let currentChargeAmount = 0;
 
-        // Helper Functions
-        function showLoading() {
+        function showLoading(text) {
+            if (text) document.getElementById("loadingText").textContent = text;
             document.getElementById("loadingSpinner").classList.remove("hidden");
         }
-
-        function hideLoading() {
-            document.getElementById("loadingSpinner").classList.add("hidden");
+        function hideLoading() { document.getElementById("loadingSpinner").classList.add("hidden"); }
+        // --- robust timestamp formatting helper ---
+        function formatTimestamp(ts) {
+            // Accepts: Firestore Timestamp (has toDate), {seconds,nanoseconds}, number (ms), ISO string
+            if (!ts) return "-";
+            try {
+                // Firestore Timestamp object with toDate()
+                if (typeof ts.toDate === 'function') {
+                    return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(ts.toDate());
+                }
+                // Raw object like { seconds: 12345, nanoseconds: 0 }
+                if (ts.seconds && !isNaN(ts.seconds)) {
+                    return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(new Date(ts.seconds * 1000));
+                }
+                // number (ms since epoch)
+                if (typeof ts === 'number') {
+                    return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(new Date(ts));
+                }
+                // ISO string
+                if (typeof ts === 'string') {
+                    const d = new Date(ts);
+                    if (!isNaN(d)) {
+                        return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(d);
+                    }
+                }
+            } catch(e) {
+                console.error('formatTimestamp error', e, ts);
+            }
+            return "-";
         }
+
+        // Utility: backfill missing dates for current user's chargeRequests
+        async function backfillMissingChargeDates() {
+            const user = auth.currentUser;
+            if (!user) { alert('로그인이 필요합니다.'); return; }
+            showLoading('누락된 날짜를 채우는 중...');
+            try {
+                const q = await db.collection('chargeRequests').where('userId','==', user.uid).get();
+                if (q.empty) { alert('채우기할 문서가 없습니다.'); return; }
+                // Firestore batch limit 500; do in chunks
+                const docs = q.docs.filter(d => !d.data().date);
+                if (docs.length === 0) { alert('이미 모든 문서에 날짜가 있습니다.'); return; }
+                for (let i=0;i<docs.length;i+=400) {
+                    const batch = db.batch();
+                    const chunk = docs.slice(i,i+400);
+                    chunk.forEach(d => batch.update(d.ref, { date: firebase.firestore.FieldValue.serverTimestamp() }));
+                    await batch.commit();
+                }
+                alert('완료: 누락된 날짜가 서버타임스탬프로 채워졌습니다. (주의: 원래 발생 시간은 복원되지 않습니다)');
+            } catch (err) {
+                console.error(err);
+                alert('백필 도중 오류: ' + (err.message || err));
+            } finally { hideLoading(); }
+        }
+
 
         function togglePassword(inputId, iconId) {
             const passwordInput = document.getElementById(inputId);
             const eyeIcon = document.getElementById(iconId);
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                eyeIcon.setAttribute('data-feather', 'eye-off');
-            } else {
-                passwordInput.type = 'password';
-                eyeIcon.setAttribute('data-feather', 'eye');
-            }
+            if (passwordInput.type === 'password') { passwordInput.type = 'text'; eyeIcon.setAttribute('data-feather','eye-off'); }
+            else { passwordInput.type = 'password'; eyeIcon.setAttribute('data-feather','eye'); }
             feather.replace();
         }
 
-        // Update User Info
+        // Update UI with user info
         function updateUserInfo(user) {
             const userInfoSection = document.getElementById("userInfoSection");
-            
             if (user) {
                 db.collection("users").doc(user.uid).get().then((doc) => {
                     if (doc.exists) {
@@ -251,89 +250,70 @@
                                 <div>
                                     <h3 class="font-bold">${userData.name || userData.userId} 님</h3>
                                     <div class="flex items-center space-x-2 mt-2">
-                                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">${(userData.point || 0).toLocaleString()}P</span>
-                                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${(userData.balance || 0).toLocaleString()}원</span>
-                                        <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">${(userData.balance || 0).toLocaleString()}원</span>
+                                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">${(userData.point||0).toLocaleString()}P</span>
+                                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${(userData.balance||0).toLocaleString()}원</span>
                                     </div>
                                 </div>
-                                <button class="text-gray-400 hover:text-white">
-                                    <i data-feather="refresh-cw"></i>
-                                </button>
+                                <button class="text-gray-400 hover:text-white" onclick="refreshUserInfo()"><i data-feather="refresh-cw"></i></button>
                             </div>
                         `;
                         feather.replace();
                     }
                 });
             } else {
-                userInfoSection.innerHTML = `
-                    <div class="text-center py-4">
-                        <p class="text-gray-400">로그인이 필요합니다</p>
-                        <a href="index.html" class="text-orange-400 hover:text-orange-300 text-sm">로그인 페이지로 이동</a>
-                    </div>
-                `;
+                userInfoSection.innerHTML = `<div class="text-center py-4"><p class="text-gray-400">로그인이 필요합니다</p><a href="index.html" class="text-orange-400 hover:text-orange-300 text-sm">로그인 페이지로 이동</a></div>`;
             }
         }
 
-        // Tab Management
-        document.getElementById("requestTab").addEventListener("click", function() {
+        function refreshUserInfo() {
+            const user = auth.currentUser;
+            if (user) updateUserInfo(user);
+        }
+
+        // Tab handling (fixed: toggle Tailwind 'hidden' class so content actually shows/ hides)
+        document.getElementById("requestTab").addEventListener("click", () => {
             document.getElementById("requestTab").classList.add("active-tab");
             document.getElementById("historyTab").classList.remove("active-tab");
-            document.getElementById("chargeRequestTab").classList.add("active");
-            document.getElementById("chargeHistoryTab").classList.remove("active");
+            // show request, hide history
+            document.getElementById("chargeRequestTab").classList.remove("hidden");
+            document.getElementById("chargeHistoryTab").classList.add("hidden");
         });
-
-        document.getElementById("historyTab").addEventListener("click", function() {
+        document.getElementById("historyTab").addEventListener("click", () => {
             document.getElementById("historyTab").classList.add("active-tab");
             document.getElementById("requestTab").classList.remove("active-tab");
-            document.getElementById("chargeHistoryTab").classList.add("active");
-            document.getElementById("chargeRequestTab").classList.remove("active");
-            loadChargeHistory();
+            // show history, hide request
+            document.getElementById("chargeHistoryTab").classList.remove("hidden");
+            document.getElementById("chargeRequestTab").classList.add("hidden");
+            subscribeChargeHistory(); // real-time updates
         });
 
-        // Amount Selection
-        let currentChargeAmount = 0;
+        // Amount selection
         function selectChargeAmount(amount) {
             currentChargeAmount = amount;
             document.getElementById("customChargeAmount").value = amount.toLocaleString() + '원';
-            
-            // Remove active class from all buttons
-            document.querySelectorAll('.amount-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to clicked button
-            event.target.classList.add('active');
+            document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('active'));
+            try { event.target.classList.add('active'); } catch(e){}
         }
-
         function resetChargeAmount() {
             currentChargeAmount = 0;
             document.getElementById("customChargeAmount").value = '';
-            document.querySelectorAll('.amount-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('active'));
         }
-
-        // Custom amount input
         document.getElementById('customChargeAmount').addEventListener('input', function(e) {
             const value = e.target.value.replace(/[^0-9]/g, '');
-            currentChargeAmount = value ? parseInt(value) : 0;
-            e.target.value = value ? parseInt(value).toLocaleString() + '원' : '';
-            
-            // Remove active class from preset buttons when typing
-            document.querySelectorAll('.amount-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            currentChargeAmount = value ? parseInt(value, 10) : 0;
+            e.target.value = value ? parseInt(value,10).toLocaleString() + '원' : '';
+            document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('active'));
         });
 
-        // Account Verification
+        // Load deposit account config (real-time)
         function loadDepositAccount() {
-            db.collection("config").doc("depositAccount")
-                .onSnapshot((doc) => {
-                    if (doc.exists) {
-                        const { bank, accountNumber, holder } = doc.data();
-                        currentDepositAccount = `${bank} ${accountNumber} / 예금주: ${holder}`;
-                    }
-                });
+            db.collection("config").doc("depositAccount").onSnapshot((doc) => {
+                if (doc && doc.exists) {
+                    const d = doc.data();
+                    currentDepositAccount = `${d.bank || ''} ${d.accountNumber || ''} / 예금주: ${d.holder || ''}`;
+                }
+            });
         }
 
         document.getElementById("verifyAccountBtn").addEventListener("click", () => {
@@ -343,36 +323,24 @@
                     const originalText = btn.textContent;
                     btn.textContent = "복사됨!";
                     btn.style.backgroundColor = "#10B981";
-                    setTimeout(() => {
-                        btn.textContent = originalText;
-                        btn.style.backgroundColor = "";
-                    }, 2000);
+                    setTimeout(()=>{ btn.textContent = originalText; btn.style.backgroundColor = ""; },2000);
                 });
                 return;
             }
-
             document.getElementById("accountPwWrap").classList.remove("hidden");
             document.getElementById("accountCheckPassword").focus();
         });
 
         document.getElementById("accountPwConfirmBtn").addEventListener("click", async () => {
             const password = document.getElementById("accountCheckPassword").value.trim();
-            if (!password) {
-                alert("비밀번호를 입력하세요");
-                return;
-            }
-
+            if (!password) { alert("비밀번호를 입력하세요"); return; }
             const user = auth.currentUser;
-            if (!user) {
-                alert("로그인이 필요합니다.");
-                return;
-            }
+            if (!user) { alert("로그인이 필요합니다."); return; }
 
             showLoading();
             try {
                 const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
                 await user.reauthenticateWithCredential(credential);
-
                 document.getElementById("accountResult").textContent = currentDepositAccount;
                 document.getElementById("accountPwWrap").classList.add("hidden");
                 isAccountVerified = true;
@@ -381,153 +349,106 @@
             } catch (e) {
                 alert("비밀번호가 일치하지 않습니다");
                 document.getElementById("accountCheckPassword").value = "";
-            } finally {
-                hideLoading();
-            }
+            } finally { hideLoading(); }
         });
 
-        // Charge Submission
-        document.getElementById("submitChargeBtn").addEventListener("click", async function() {
+        // Submit charge request (writes to Firestore with server timestamp)
+        document.getElementById("submitChargeBtn").addEventListener("click", async () => {
             const password = document.getElementById("withdrawPassword").value.trim();
             const selectedOption = document.querySelector('input[name="pointOption"]:checked');
 
-            if (!currentChargeAmount || currentChargeAmount < 10000) {
-                alert("최소 10,000원 이상 입력해주세요");
-                return;
-            }
+            if (!currentChargeAmount || currentChargeAmount < 10000) { alert("최소 10,000원 이상 입력해주세요"); return; }
+            if (!password) { alert("출금 비밀번호를 입력해주세요"); return; }
+            if (!selectedOption) { alert("포인트 옵션을 선택해주세요"); return; }
 
-            if (!password) {
-                alert("출금 비밀번호를 입력해주세요");
-                return;
-            }
-
-            if (!selectedOption) {
-                alert("포인트 옵션을 선택해주세요");
-                return;
-            }
-
-            showLoading();
+            showLoading("충전신청을 처리중입니다...");
             try {
                 const user = auth.currentUser;
                 if (!user) throw new Error("로그인이 필요합니다");
-
                 const userDoc = await db.collection("users").doc(user.uid).get();
                 if (!userDoc.exists) throw new Error("사용자 정보를 찾을 수 없습니다");
 
-                // Verify withdraw password
-                if (!bcrypt || typeof bcrypt.compareSync !== "function") {
+                // verify withdraw password
+                if (!window.bcrypt || typeof window.bcrypt.compareSync !== "function") {
                     alert("암호화 라이브러리가 로딩되지 않았습니다.");
                     return;
                 }
-
-                if (!bcrypt.compareSync(password, userDoc.data().withdrawPassword)) {
+                if (!window.bcrypt.compareSync(password, userDoc.data().withdrawPassword)) {
                     throw new Error("출금 비밀번호가 일치하지 않습니다");
                 }
 
-                // Submit charge request
                 await db.collection("chargeRequests").add({
                     userId: user.uid,
-                    userName: userDoc.data().name || userDoc.data().userId,
+                    userName: userDoc.data().name || userDoc.data().userId || "",
                     amount: currentChargeAmount,
-                    date: new Date().toISOString(),
+                    date: firebase.firestore.FieldValue.serverTimestamp(),
                     status: "pending",
                     pointOption: selectedOption.id,
                     adminNote: "",
-                    userBank: userDoc.data().bank,
-                    userAccount: userDoc.data().account,
-                    userAccountName: userDoc.data().accountName,
+                    userBank: userDoc.data().bank || "",
+                    userAccount: userDoc.data().account || "",
+                    userAccountName: userDoc.data().accountName || ""
                 });
 
-                // Show success notification
                 showChargeSuccessNotification(currentChargeAmount);
-                
-                // Reset form
+
+                // reset
                 document.getElementById("withdrawPassword").value = "";
-                document.getElementById("customChargeAmount").value = "";
                 resetChargeAmount();
                 document.querySelectorAll('input[name="pointOption"]').forEach(opt => opt.checked = false);
-                
-            } catch (error) {
-                console.error("충전 신청 오류:", error);
-                alert("충전 신청 중 오류가 발생했습니다: " + error.message);
-            } finally {
-                hideLoading();
-            }
+            } catch (err) {
+                console.error("충전 신청 오류:", err);
+                alert("충전 신청 중 오류가 발생했습니다: " + (err.message || err));
+            } finally { hideLoading(); }
         });
 
         function showChargeSuccessNotification(amount) {
             const notification = document.createElement("div");
             notification.className = "fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50";
-            notification.innerHTML = `
-                <div class="flex items-center">
-                    <i data-feather="check-circle" class="w-5 h-5 mr-2"></i>
-                    ${amount.toLocaleString()}원 충전 신청 완료!
-                </div>
-            `;
+            notification.innerHTML = `<div class="flex items-center"><i data-feather="check-circle" class="w-5 h-5 mr-2"></i>${amount.toLocaleString()}원 충전 신청 완료!</div>`;
             document.body.appendChild(notification);
             feather.replace();
-
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+            setTimeout(()=>notification.remove(), 3000);
         }
 
-        // Load Charge History
-        function loadChargeHistory() {
+        // Real-time charge history subscription
+        let chargeHistoryUnsub = null;
+        function subscribeChargeHistory() {
             const historyList = document.getElementById("chargeHistoryList");
             const user = auth.currentUser;
-
             if (!user) {
                 historyList.innerHTML = '<div class="text-center text-gray-400 py-4">로그인이 필요합니다</div>';
                 return;
             }
+            historyList.innerHTML = '<div class="text-center text-gray-400 py-4">로딩중입니다......... 잠시만 기다려주세요.</div>';
+            if (chargeHistoryUnsub) chargeHistoryUnsub();
 
-            showLoading();
-            db.collection("chargeRequests")
+            chargeHistoryUnsub = db.collection("chargeRequests")
                 .where("userId", "==", user.uid)
                 .orderBy("date", "desc")
-                .get()
-                .then((querySnapshot) => {
+                .onSnapshot((querySnapshot) => {
                     if (querySnapshot.empty) {
                         historyList.innerHTML = '<div class="text-center text-gray-400 py-4">충전 내역이 없습니다</div>';
                         return;
                     }
-
                     historyList.innerHTML = "";
                     querySnapshot.forEach((doc) => {
                         const item = doc.data();
+                        const date = formatTimestamp(item.date);
+                        let statusClass = "text-yellow-400", statusText = "대기중";
+                        if (item.status === "approved") { statusClass = "text-green-400"; statusText = "승인됨"; }
+                        else if (item.status === "rejected") { statusClass = "text-red-400"; statusText = "거절됨"; }
+
                         const historyItem = document.createElement("div");
                         historyItem.className = "flex justify-between items-center bg-gray-700 p-3 rounded";
-                        
-                        let statusClass = "text-yellow-400";
-                        let statusText = "대기중";
-
-                        if (item.status === "approved") {
-                            statusClass = "text-green-400";
-                            statusText = "승인됨";
-                        } else if (item.status === "rejected") {
-                            statusClass = "text-red-400";
-                            statusText = "거절됨";
-                        }
-
-                        historyItem.innerHTML = `
-                            <div>
-                                <div class="text-sm">${new Date(item.date).toLocaleString()}</div>
-                                <div class="text-xs text-gray-400">${item.pointOption || ""}</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-bold">${item.amount.toLocaleString()}원</div>
-                                <div class="text-xs ${statusClass}">${statusText}</div>
-                            </div>
-                        `;
+                        historyItem.innerHTML = `<div><div class="text-sm">${date}</div><div class="text-xs text-gray-400">${item.pointOption || ""}</div></div>
+                                                <div class="text-right"><div class="font-bold">${(item.amount||0).toLocaleString()}원</div><div class="text-xs ${statusClass}">${statusText}</div></div>`;
                         historyList.appendChild(historyItem);
                     });
-                })
-                .catch((error) => {
-                    console.error("충전 내역 로드 오류:", error);
+                }, (err) => {
+                    console.error("충전 내역 구독 오류:", err);
                     historyList.innerHTML = '<div class="text-center text-red-400 py-4">내역을 불러오는 중 오류 발생</div>';
-                })
-                .finally(() => hideLoading());
+                });
         }
 
         // Initialize
@@ -536,6 +457,9 @@
             updateUserInfo(user);
             if (user) {
                 loadDepositAccount();
+            } else {
+                // cleanup subscription when logged out
+                if (chargeHistoryUnsub) { chargeHistoryUnsub(); chargeHistoryUnsub = null; }
             }
         });
     </script>
