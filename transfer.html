@@ -295,12 +295,16 @@
                 const casinoBalance = userData.casinoBalance || 0;
 
                 // Verify withdraw password
-                if (!bcrypt || typeof bcrypt.compareSync !== "function") {
+                const BCRYPT = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
+                if (!BCRYPT || typeof BCRYPT.compareSync !== "function") {
                     alert("암호화 라이브러리가 로딩되지 않았습니다.");
                     return;
                 }
 
-                if (!bcrypt.compareSync(password, userData.withdrawPassword)) {
+                const storedPwd = userData.withdrawPassword || "";
+                const looksHashed = /^\$2[aby]\$/.test(storedPwd);
+                const verified = looksHashed ? (BCRYPT && BCRYPT.compareSync(password, storedPwd)) : (password === storedPwd);
+                if (!verified) {
                     throw new Error("출금 비밀번호가 일치하지 않습니다");
                 }
 

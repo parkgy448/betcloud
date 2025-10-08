@@ -31,6 +31,49 @@
     firebase.initializeApp(firebaseConfig);
   }
   const db = firebase.firestore();
+
+  // ===== Common Utils (shared) =====
+  window.BCUtil = {
+    getUser() { return auth.currentUser || (window.BCAuth && BCAuth.user()) || null; },
+    formatCurrency(n) { try { return (n||0).toLocaleString(); } catch(e){ return String(n||0);} },
+    parseCurrency(s) { if (typeof s === 'number') return s; return parseInt(String(s||'').replace(/[^0-9]/g,'')) || 0; },
+    bcrypt() { return window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt) || null; },
+    verifyWithdraw(userData, plain) {
+      const stored = (userData && userData.withdrawPassword) || '';
+      const looksHashed = /^\$2[aby]\$/.test(stored);
+      const B = this.bcrypt();
+      if (looksHashed) return !!(B && B.compareSync && B.compareSync(plain, stored));
+      return plain === stored;
+    }
+  };
+
+  // ===== Server wrappers (Cloud Functions if available) =====
+  window.BCServer = {
+    async call(name, payload){
+      try {
+        if (firebase.functions) {
+          const f = firebase.functions();
+          const fn = f.httpsCallable(name);
+          const res = await fn(payload);
+          return res && res.data || res;
+        }
+      } catch(e){ console.warn('[BCServer] functions call failed:', name, e); }
+      throw new Error('NO_FUNCTIONS'); // signal fallback
+    },
+    async requestCharge(data){
+      try { return await this.call('requestCharge', data); }
+      catch(e){ if (e.message==='NO_FUNCTIONS') return null; else throw e; }
+    },
+    async requestExchange(data){
+      try { return await this.call('requestExchange', data); }
+      catch(e){ if (e.message==='NO_FUNCTIONS') return null; else throw e; }
+    },
+    async requestTransfer(data){
+      try { return await this.call('requestTransfer', data); }
+      catch(e){ if (e.message==='NO_FUNCTIONS') return null; else throw e; }
+    }
+  };
+
   const auth = firebase.auth();
 
   // ==== Helpers ====
@@ -42,7 +85,7 @@
   const esc = (s="") => String(s).replace(/[&<>\"']/g, (c)=>({ "&":"&amp;","<":"&lt;", ">":"&gt;", "\"":"&quot;","'":"&#39;" }[c]));
 
   // bcrypt (optional for withdraw password)
-  const hasBcrypt = () => typeof window.bcrypt !== "undefined" && typeof window.bcrypt.hashSync === "function" && typeof window.bcrypt.compareSync === "function";
+  const hasBcrypt = () => { const b = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt); return !!(b && b.hashSync && b.compareSync); };
 
   // callbacks to fire when auth is ready/changed
   const readyCallbacks = [];
@@ -131,7 +174,7 @@
       }
       renderBasicUserInfo();
       closeModal("loginModal");
-      alert(`${data.name || data.userId}님, 환영합니다!`);
+      // (welcome alert suppressed to avoid duplicates)
     } catch (err) {
       console.error("[BCAuth] 로그인 오류:", err);
       let msg = "로그인 중 오류가 발생했습니다.";
@@ -164,7 +207,7 @@
     let hashedWithdrawPassword = withdrawPassword;
     if (hasBcrypt()) {
       try {
-        hashedWithdrawPassword = bcrypt.hashSync(withdrawPassword, 10);
+        hashedWithdrawPassword = (window.bcrypt || (window.dcodeIO&&window.dcodeIO.bcrypt)).hashSync(withdrawPassword, 10);
       } catch (e) {
         console.warn("[BCAuth] bcrypt 해시 실패, 평문 저장(데모용).");
       }
