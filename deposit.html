@@ -276,6 +276,14 @@
 
         // Tab Management
         document.getElementById("requestTab").addEventListener("click", function() {
+            showChargeTab('request');
+            // switch to request
+            document.getElementById("requestTab").classList.add("active-tab");
+            document.getElementById("historyTab").classList.remove("active-tab");
+            const req = document.getElementById("chargeRequestTab");
+            const his = document.getElementById("chargeHistoryTab");
+            req.classList.remove("hidden"); req.classList.add("active");
+            his.classList.add("hidden"); his.classList.remove("active");
             document.getElementById("requestTab").classList.add("active-tab");
             document.getElementById("historyTab").classList.remove("active-tab");
             document.getElementById("chargeRequestTab").classList.add("active");
@@ -283,6 +291,15 @@
         });
 
         document.getElementById("historyTab").addEventListener("click", function() {
+            showChargeTab('history');
+            loadChargeHistory(true);
+            // switch to history
+            document.getElementById("historyTab").classList.add("active-tab");
+            document.getElementById("requestTab").classList.remove("active-tab");
+            const req = document.getElementById("chargeRequestTab");
+            const his = document.getElementById("chargeHistoryTab");
+            his.classList.remove("hidden"); his.classList.add("active");
+            req.classList.add("hidden"); req.classList.remove("active");
             document.getElementById("historyTab").classList.add("active-tab");
             document.getElementById("requestTab").classList.remove("active-tab");
             document.getElementById("chargeHistoryTab").classList.add("active");
@@ -533,6 +550,7 @@
         // Initialize
         feather.replace();
         auth.onAuthStateChanged((user) => {
+            showChargeTab('request');
             updateUserInfo(user);
             if (user) {
                 loadDepositAccount();

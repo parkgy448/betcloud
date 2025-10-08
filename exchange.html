@@ -301,19 +301,24 @@
 
         // Tab Management
         document.getElementById("exchangeRequestTab").addEventListener("click", function() {
+            showExchangeTab('request');
             document.getElementById("exchangeRequestTab").classList.add("active-tab");
             document.getElementById("exchangeHistoryTab").classList.remove("active-tab");
-            document.getElementById("exchangeRequestContent").classList.add("active");
-            document.getElementById("exchangeHistoryContent").classList.remove("active");
+            const req = document.getElementById("exchangeRequestContent");
+            const his = document.getElementById("exchangeHistoryContent");
+            req.classList.add("active"); req.classList.remove("hidden");
+            his.classList.remove("active"); his.classList.add("hidden");
             refreshBalance();
         });
 
         document.getElementById("exchangeHistoryTab").addEventListener("click", function() {
+            showExchangeTab('history');
+            loadExchangeHistory(true);
             document.getElementById("exchangeHistoryTab").classList.add("active-tab");
             document.getElementById("exchangeRequestTab").classList.remove("active-tab");
             document.getElementById("exchangeHistoryContent").classList.add("active");
             document.getElementById("exchangeRequestContent").classList.remove("active");
-            loadExchangeHistory();
+            const req = document.getElementById("exchangeRequestContent"); const his = document.getElementById("exchangeHistoryContent"); his.classList.remove("hidden"); req.classList.add("hidden"); loadExchangeHistory();
         });
 
         // Amount Selection
@@ -384,16 +389,12 @@
                 }
 
                 // Verify withdraw password
-                const BCRYPT = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
-                if (!BCRYPT || typeof BCRYPT.compareSync !== "function") {
+                if (!bcrypt || typeof bcrypt.compareSync !== "function") {
                     alert("암호화 라이브러리가 로딩되지 않았습니다.");
                     return;
                 }
 
-                const storedPwd = userData.withdrawPassword || "";
-                const looksHashed = /^\$2[aby]\$/.test(storedPwd);
-                const verified = looksHashed ? (BCRYPT && BCRYPT.compareSync(password, storedPwd)) : (password === storedPwd);
-                if (!verified) {
+                if (!bcrypt.compareSync(password, userData.withdrawPassword)) {
                     throw new Error("출금 비밀번호가 일치하지 않습니다");
                 }
 
@@ -519,6 +520,7 @@
         // Initialize
         feather.replace();
         auth.onAuthStateChanged((user) => {
+            showExchangeTab('request');
             updateUserInfo(user);
         });
     </script>
