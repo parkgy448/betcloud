@@ -74,7 +74,23 @@
             background-color: #f59e0b;
             color: white;
         }
-    </style>
+    
+        .admin-action-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px;
+            border: none;
+            background-color: #374151; /* default visible background for action buttons */
+            color: white;
+            cursor: pointer;
+        }
+        .admin-action-btn:hover { filter: brightness(1.06); }
+        .admin-action-btn.complete { background-color: #10b981; color: white; }
+        .admin-action-btn.block-ip { background-color: #ef4444; color: white; }
+        .admin-action-btn[data-action="reset-pw"] { background-color: #f59e0b; color: white; }
+
+        </style>
 </head>
 <body class="min-h-screen">
     <div class="container mx-auto px-4 py-6">
@@ -126,6 +142,7 @@
             <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="exchanges">환전 관리</button>
             <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="chats">고객문의</button>
             <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="account">계좌 설정</button>
+            <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="notices">공지사항 관리</button>
         </div>
 
         <!-- Search Box (for users tab) -->
@@ -267,6 +284,171 @@
             </div>
         </div>
     </div>
+
+    
+        <!-- Notices Tab (공지사항 관리) -->
+        <div id="noticesTab" class="tab-content">
+<div class="p-4 bg-gray-900 rounded-md mt-4">
+  <h2 class="font-bold mb-2">관리자: 공지사항 / 이벤트 관리</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Form to add -->
+    <div class="bg-gray-800/60 p-3 rounded">
+      <h3 class="font-semibold mb-2">새 항목 추가</h3>
+      <label class="block text-xs text-gray-300">타입</label>
+      <select id="new-type" class="w-full p-2 mb-2 bg-gray-700 text-gray-100 rounded">
+        <option value="announcement">공지사항</option>
+        <option value="event">이벤트</option>
+      </select>
+      <label class="block text-xs text-gray-300">제목</label>
+      <input id="new-title" class="w-full p-2 mb-2 bg-gray-700 text-gray-100 rounded" placeholder="★추석이벤트★">
+      <label class="block text-xs text-gray-300">순서(order)</label>
+      <input id="new-order" type="number" class="w-full p-2 mb-2 bg-gray-700 text-gray-100 rounded" value="1">
+      <button id="btn-add" class="px-3 py-2 bg-green-600 rounded">추가</button>
+    </div>
+
+    <!-- Existing items -->
+    <div class="bg-gray-800/60 p-3 rounded">
+      <h3 class="font-semibold mb-2">기존 항목</h3>
+      <div id="items-list" class="space-y-2 max-h-64 overflow-auto"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+ Admin management script:
+ - Lists announcements & events (both)
+ - Allows edit (title, order, active) and delete
+ - Only callable by authenticated admin users (client should ensure and Firestore rules must enforce)
+*/
+
+function adminRenderItem(doc, colName) {
+  const container = document.createElement('div');
+  container.className = 'p-2 bg-gray-700 rounded flex items-center gap-2';
+
+  const titleInput = document.createElement('input');
+  titleInput.value = doc.data().title || '';
+  titleInput.className = 'flex-1 p-1 bg-gray-800 text-gray-100 rounded';
+
+  const orderInput = document.createElement('input');
+  orderInput.type = 'number';
+  orderInput.value = doc.data().order || 1;
+  orderInput.className = 'w-16 p-1 bg-gray-800 text-gray-100 rounded';
+
+  const activeChk = document.createElement('input');
+  activeChk.type = 'checkbox';
+  activeChk.checked = doc.data().active !== false;
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'px-2 py-1 bg-blue-600 rounded text-sm';
+  saveBtn.innerText = '저장';
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'px-2 py-1 bg-red-600 rounded text-sm';
+  delBtn.innerText = '삭제';
+
+  container.appendChild(titleInput);
+  container.appendChild(orderInput);
+  const actLabel = document.createElement('label');
+  actLabel.className = 'text-xs flex items-center gap-1';
+  actLabel.appendChild(activeChk);
+  actLabel.appendChild(document.createTextNode('활성'));
+  container.appendChild(actLabel);
+  container.appendChild(saveBtn);
+  container.appendChild(delBtn);
+
+  // events
+  saveBtn.addEventListener('click', async () => {
+    try {
+      await firebase.firestore().collection(colName).doc(doc.id).update({
+        title: titleInput.value,
+        order: Number(orderInput.value) || 1,
+        active: !!activeChk.checked,
+      });
+      alert('저장되었습니다.');
+    } catch (err) {
+      console.error(err);
+      alert('저장 실패: ' + err.message);
+    }
+  });
+
+  delBtn.addEventListener('click', async () => {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      await firebase.firestore().collection(colName).doc(doc.id).delete();
+      alert('삭제되었습니다.');
+    } catch (err) {
+      console.error(err);
+      alert('삭제 실패: ' + err.message);
+    }
+  });
+
+  return container;
+}
+
+function loadAdminItems() {
+  const list = document.getElementById('items-list');
+  list.innerHTML = '';
+  const db = firebase.firestore();
+  // load announcements
+  db.collection('announcements').orderBy('order','asc').get().then(snap => {
+    snap.forEach(doc => {
+      const el = adminRenderItem(doc, 'announcements');
+      const wrapper = document.createElement('div');
+      const badge = document.createElement('div');
+      badge.className = 'text-xs text-yellow-300 mb-1';
+      badge.innerText = '공지';
+      wrapper.appendChild(badge);
+      wrapper.appendChild(el);
+      list.appendChild(wrapper);
+    });
+  });
+  // load events
+  db.collection('events').orderBy('order','asc').get().then(snap => {
+    snap.forEach(doc => {
+      const el = adminRenderItem(doc, 'events');
+      const wrapper = document.createElement('div');
+      const badge = document.createElement('div');
+      badge.className = 'text-xs text-green-300 mb-1';
+      badge.innerText = '이벤트';
+      wrapper.appendChild(badge);
+      wrapper.appendChild(el);
+      list.appendChild(wrapper);
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // add handler for new item
+  document.getElementById('btn-add').addEventListener('click', async () => {
+    const type = document.getElementById('new-type').value;
+    const title = document.getElementById('new-title').value.trim();
+    const order = Number(document.getElementById('new-order').value) || 1;
+    if (!title) return alert('제목을 입력하세요.');
+
+    const col = type === 'announcement' ? 'announcements' : 'events';
+    try {
+      await firebase.firestore().collection(col).add({
+        title,
+        order,
+        active: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById('new-title').value = '';
+      loadAdminItems();
+      alert('추가되었습니다.');
+    } catch (err) {
+      console.error(err);
+      alert('추가 실패: ' + err.message);
+    }
+  });
+
+  // initial load
+  loadAdminItems();
+});
+</script>
+        </div>
 
     <!-- User Info Modal -->
     <div id="userInfoModal" class="modal hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
@@ -1478,6 +1660,10 @@
                         case "account":
                             loadDepositAccount();
                             break;
+                        case "notices":
+                            // 공지사항 관리 로드
+                            loadAdminItems();
+                            break;
                     }
                 });
             });
@@ -1532,168 +1718,7 @@
         });
     </script>
 
-<!-- BEGIN: Admin Notices Management (Firestore) -->
-<div class="p-4 bg-gray-900 rounded-md mt-4">
-  <h2 class="font-bold mb-2">관리자: 공지사항 / 이벤트 관리</h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- Form to add -->
-    <div class="bg-gray-800/60 p-3 rounded">
-      <h3 class="font-semibold mb-2">새 항목 추가</h3>
-      <label class="block text-xs text-gray-300">타입</label>
-      <select id="new-type" class="w-full p-2 mb-2 bg-gray-700 text-gray-100 rounded">
-        <option value="announcement">공지사항</option>
-        <option value="event">이벤트</option>
-      </select>
-      <label class="block text-xs text-gray-300">제목</label>
-      <input id="new-title" class="w-full p-2 mb-2 bg-gray-700 text-gray-100 rounded" placeholder="★추석이벤트★">
-      <label class="block text-xs text-gray-300">순서(order)</label>
-      <input id="new-order" type="number" class="w-full p-2 mb-2 bg-gray-700 text-gray-100 rounded" value="1">
-      <button id="btn-add" class="px-3 py-2 bg-green-600 rounded">추가</button>
-    </div>
-
-    <!-- Existing items -->
-    <div class="bg-gray-800/60 p-3 rounded">
-      <h3 class="font-semibold mb-2">기존 항목</h3>
-      <div id="items-list" class="space-y-2 max-h-64 overflow-auto"></div>
-    </div>
-  </div>
-</div>
-
-<script>
-/*
- Admin management script:
- - Lists announcements & events (both)
- - Allows edit (title, order, active) and delete
- - Only callable by authenticated admin users (client should ensure and Firestore rules must enforce)
-*/
-
-function adminRenderItem(doc, colName) {
-  const container = document.createElement('div');
-  container.className = 'p-2 bg-gray-700 rounded flex items-center gap-2';
-
-  const titleInput = document.createElement('input');
-  titleInput.value = doc.data().title || '';
-  titleInput.className = 'flex-1 p-1 bg-gray-800 text-gray-100 rounded';
-
-  const orderInput = document.createElement('input');
-  orderInput.type = 'number';
-  orderInput.value = doc.data().order || 1;
-  orderInput.className = 'w-16 p-1 bg-gray-800 text-gray-100 rounded';
-
-  const activeChk = document.createElement('input');
-  activeChk.type = 'checkbox';
-  activeChk.checked = doc.data().active !== false;
-
-  const saveBtn = document.createElement('button');
-  saveBtn.className = 'px-2 py-1 bg-blue-600 rounded text-sm';
-  saveBtn.innerText = '저장';
-
-  const delBtn = document.createElement('button');
-  delBtn.className = 'px-2 py-1 bg-red-600 rounded text-sm';
-  delBtn.innerText = '삭제';
-
-  container.appendChild(titleInput);
-  container.appendChild(orderInput);
-  const actLabel = document.createElement('label');
-  actLabel.className = 'text-xs flex items-center gap-1';
-  actLabel.appendChild(activeChk);
-  actLabel.appendChild(document.createTextNode('활성'));
-  container.appendChild(actLabel);
-  container.appendChild(saveBtn);
-  container.appendChild(delBtn);
-
-  // events
-  saveBtn.addEventListener('click', async () => {
-    try {
-      await firebase.firestore().collection(colName).doc(doc.id).update({
-        title: titleInput.value,
-        order: Number(orderInput.value) || 1,
-        active: !!activeChk.checked,
-      });
-      alert('저장되었습니다.');
-    } catch (err) {
-      console.error(err);
-      alert('저장 실패: ' + err.message);
-    }
-  });
-
-  delBtn.addEventListener('click', async () => {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
-    try {
-      await firebase.firestore().collection(colName).doc(doc.id).delete();
-      alert('삭제되었습니다.');
-    } catch (err) {
-      console.error(err);
-      alert('삭제 실패: ' + err.message);
-    }
-  });
-
-  return container;
-}
-
-function loadAdminItems() {
-  const list = document.getElementById('items-list');
-  list.innerHTML = '';
-  const db = firebase.firestore();
-  // load announcements
-  db.collection('announcements').orderBy('order','asc').get().then(snap => {
-    snap.forEach(doc => {
-      const el = adminRenderItem(doc, 'announcements');
-      const wrapper = document.createElement('div');
-      const badge = document.createElement('div');
-      badge.className = 'text-xs text-yellow-300 mb-1';
-      badge.innerText = '공지';
-      wrapper.appendChild(badge);
-      wrapper.appendChild(el);
-      list.appendChild(wrapper);
-    });
-  });
-  // load events
-  db.collection('events').orderBy('order','asc').get().then(snap => {
-    snap.forEach(doc => {
-      const el = adminRenderItem(doc, 'events');
-      const wrapper = document.createElement('div');
-      const badge = document.createElement('div');
-      badge.className = 'text-xs text-green-300 mb-1';
-      badge.innerText = '이벤트';
-      wrapper.appendChild(badge);
-      wrapper.appendChild(el);
-      list.appendChild(wrapper);
-    });
-  });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  // add handler for new item
-  document.getElementById('btn-add').addEventListener('click', async () => {
-    const type = document.getElementById('new-type').value;
-    const title = document.getElementById('new-title').value.trim();
-    const order = Number(document.getElementById('new-order').value) || 1;
-    if (!title) return alert('제목을 입력하세요.');
-
-    const col = type === 'announcement' ? 'announcements' : 'events';
-    try {
-      await firebase.firestore().collection(col).add({
-        title,
-        order,
-        active: true,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      document.getElementById('new-title').value = '';
-      loadAdminItems();
-      alert('추가되었습니다.');
-    } catch (err) {
-      console.error(err);
-      alert('추가 실패: ' + err.message);
-    }
-  });
-
-  // initial load
-  loadAdminItems();
-});
-</script>
-<!-- END: Admin Notices Management (Firestore) -->
 
 </body>
 </html>
