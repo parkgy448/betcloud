@@ -20,6 +20,8 @@
         .active-tab { background-color: #f97316; color: white; }
         .amount-btn.active { background-color: #f97316; color: white; }
     </style>
+
+
 </head>
 <body class="min-h-screen">
     <div class="container mx-auto px-4 py-6">
@@ -47,22 +49,18 @@
             <div class="bg-gray-800 rounded-lg p-4 mb-6">
                 <h3 class="font-bold mb-4">충전계좌정보</h3>
                 <div class="space-y-4">
-                    <div class="relative">
-                        <button onclick="togglePassword('withdrawPassword', 'withdrawEyeIcon')" class="absolute right-2 top-7 text-gray-400 hover:text-white">
-                            <i data-feather="eye" id="withdrawEyeIcon" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-
-                    <div class="bg-gray-900 rounded-lg p-4">
-                        <h4 class="font-bold text-orange-400 mb-2">입금 계좌 확인</h4>
-                        <div id="accountResult" class="text-sm text-gray-300 mb-3">계좌확인을 위해 비밀번호를 입력해주세요</div>
-                        <div id="accountPwWrap" class="hidden">
-                            <div class="flex space-x-2 mb-2">
-                                <input type="password" id="accountCheckPassword" class="flex-1 bg-gray-700 rounded p-2" placeholder="비밀번호 입력">
-                                <button id="accountPwConfirmBtn" class="bg-orange-500 hover:bg-orange-600 px-4 rounded">확인</button>
+                    <div class="mt-2">
+                        <div class="bg-gray-900 rounded-lg p-4">
+                            <h4 class="font-bold text-orange-400 mb-2">입금 계좌 확인</h4>
+                            <div id="accountResult" class="text-sm text-gray-300 mb-3">계좌확인을 위해 확인 버튼을 눌러주세요</div>
+                            <div id="accountPwWrap" class="hidden">
+                                <div class="flex space-x-2 mb-2">
+                                    <input type="password" id="accountCheckPassword" class="flex-1 bg-gray-700 rounded p-2" placeholder="비밀번호 입력">
+                                    <button id="accountPwConfirmBtn" class="bg-orange-500 hover:bg-orange-600 px-4 rounded">확인</button>
+                                </div>
                             </div>
+                            <button id="verifyAccountBtn" class="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded">계좌 확인하기</button>
                         </div>
-                        <button id="verifyAccountBtn" class="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded">계좌 확인하기</button>
                     </div>
                 </div>
             </div>
@@ -175,22 +173,17 @@
         function hideLoading() { document.getElementById("loadingSpinner").classList.add("hidden"); }
         // --- robust timestamp formatting helper ---
         function formatTimestamp(ts) {
-            // Accepts: Firestore Timestamp (has toDate), {seconds,nanoseconds}, number (ms), ISO string
             if (!ts) return "-";
             try {
-                // Firestore Timestamp object with toDate()
                 if (typeof ts.toDate === 'function') {
                     return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(ts.toDate());
                 }
-                // Raw object like { seconds: 12345, nanoseconds: 0 }
                 if (ts.seconds && !isNaN(ts.seconds)) {
                     return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(new Date(ts.seconds * 1000));
                 }
-                // number (ms since epoch)
                 if (typeof ts === 'number') {
                     return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(new Date(ts));
                 }
-                // ISO string
                 if (typeof ts === 'string') {
                     const d = new Date(ts);
                     if (!isNaN(d)) {
@@ -211,7 +204,6 @@
             try {
                 const q = await db.collection('chargeRequests').where('userId','==', user.uid).get();
                 if (q.empty) { alert('채우기할 문서가 없습니다.'); return; }
-                // Firestore batch limit 500; do in chunks
                 const docs = q.docs.filter(d => !d.data().date);
                 if (docs.length === 0) { alert('이미 모든 문서에 날짜가 있습니다.'); return; }
                 for (let i=0;i<docs.length;i+=400) {
@@ -225,15 +217,6 @@
                 console.error(err);
                 alert('백필 도중 오류: ' + (err.message || err));
             } finally { hideLoading(); }
-        }
-
-
-        function togglePassword(inputId, iconId) {
-            const passwordInput = document.getElementById(inputId);
-            const eyeIcon = document.getElementById(iconId);
-            if (passwordInput.type === 'password') { passwordInput.type = 'text'; eyeIcon.setAttribute('data-feather','eye-off'); }
-            else { passwordInput.type = 'password'; eyeIcon.setAttribute('data-feather','eye'); }
-            feather.replace();
         }
 
         // Update UI with user info
@@ -268,21 +251,19 @@
             if (user) updateUserInfo(user);
         }
 
-        // Tab handling (fixed: toggle Tailwind 'hidden' class so content actually shows/ hides)
+        // Tab handling
         document.getElementById("requestTab").addEventListener("click", () => {
             document.getElementById("requestTab").classList.add("active-tab");
             document.getElementById("historyTab").classList.remove("active-tab");
-            // show request, hide history
             document.getElementById("chargeRequestTab").classList.remove("hidden");
             document.getElementById("chargeHistoryTab").classList.add("hidden");
         });
         document.getElementById("historyTab").addEventListener("click", () => {
             document.getElementById("historyTab").classList.add("active-tab");
             document.getElementById("requestTab").classList.remove("active-tab");
-            // show history, hide request
             document.getElementById("chargeHistoryTab").classList.remove("hidden");
             document.getElementById("chargeRequestTab").classList.add("hidden");
-            subscribeChargeHistory(); // real-time updates
+            subscribeChargeHistory();
         });
 
         // Amount selection
@@ -352,11 +333,9 @@
 
         // Submit charge request (writes to Firestore with server timestamp)
         document.getElementById("submitChargeBtn").addEventListener("click", async () => {
-            const password = document.getElementById("withdrawPassword").value.trim();
             const selectedOption = document.querySelector('input[name="pointOption"]:checked');
 
             if (!currentChargeAmount || currentChargeAmount < 10000) { alert("최소 10,000원 이상 입력해주세요"); return; }
-            if (!password) { alert("출금 비밀번호를 입력해주세요"); return; }
             if (!selectedOption) { alert("포인트 옵션을 선택해주세요"); return; }
 
             showLoading("충전신청을 처리중입니다...");
@@ -366,15 +345,7 @@
                 const userDoc = await db.collection("users").doc(user.uid).get();
                 if (!userDoc.exists) throw new Error("사용자 정보를 찾을 수 없습니다");
 
-                // verify withdraw password
-                if (!window.bcrypt || typeof window.bcrypt.compareSync !== "function") {
-                    alert("암호화 라이브러리가 로딩되지 않았습니다.");
-                    return;
-                }
-                if (!window.bcrypt.compareSync(password, userDoc.data().withdrawPassword)) {
-                    throw new Error("출금 비밀번호가 일치하지 않습니다");
-                }
-
+                // Directly create charge request without requiring a separate withdraw-password check
                 await db.collection("chargeRequests").add({
                     userId: user.uid,
                     userName: userDoc.data().name || userDoc.data().userId || "",
@@ -391,7 +362,6 @@
                 showChargeSuccessNotification(currentChargeAmount);
 
                 // reset
-                document.getElementById("withdrawPassword").value = "";
                 resetChargeAmount();
                 document.querySelectorAll('input[name="pointOption"]').forEach(opt => opt.checked = false);
             } catch (err) {
@@ -456,7 +426,6 @@
             if (user) {
                 loadDepositAccount();
             } else {
-                // cleanup subscription when logged out
                 if (chargeHistoryUnsub) { chargeHistoryUnsub(); chargeHistoryUnsub = null; }
             }
         });
