@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
-    
+
     <!-- Firebase and dependencies -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -15,7 +15,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
     <script src="auth.js"></script>
-    <style>
+    
+<!-- ============================= -->
+<!--        GLOBAL STYLES          -->
+<!-- ============================= -->
+<style>
+
         @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
         body {
             font-family: 'Oxanium', sans-serif;
@@ -33,11 +38,10 @@
             50% { opacity: 0.8; }
             100% { opacity: 1; }
         }
-    
+
         /* Sticky header layout */
         .site-header{ height:64px; }
         body { padding-top: 64px; } /* ensure page content is visible below sticky header */
-
 
         /* Responsive header & logo sizing adjustments */
         .site-header {
@@ -73,13 +77,11 @@
             .promo-banner-img { height: 36vw !important; } /* proportional to viewport width */
         }
 
-
 /* Ensure banner sits directly under header without extra gap, and banner text overlays removed */
 .promo-banner { margin-top: 0 !important; padding: 0 !important; }
 .promo-banner-img { display: block; margin: 0; border-radius: 12px; }
 /* Remove any pre-existing overlay text positioning if present */
 .promo-banner .overlay, .promo-banner .banner-text, .promo-banner .promo-text { display: none !important; }
-
 
 /* Remove gap between sticky header and the welcome/user info block */
 .site-header { margin-bottom: 0 !important; }
@@ -107,7 +109,6 @@
     #userInfoSection { padding-top: 8px !important; padding-bottom: 8px !important; }
 }
 
-
 /* Ensure no gap between header and userInfoSection and banner */
 .site-header { margin-bottom: 0 !important; }
 #userInfoSection { margin-top: 0 !important; border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; padding-top: 12px !important; padding-bottom: 12px !important; }
@@ -123,7 +124,7 @@
 </head>
 <body class="min-h-screen">
     <div id="vanta-bg" class="fixed inset-0 z-0"></div>
-    
+
 
     <!-- Sticky Centered Header -->
     <header class="site-header sticky top-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -149,18 +150,15 @@
         </div>
 
 
-        
-        
 
 
         <!-- User Info - Dynamic based on login status -->
         <!-- Promo Banner (Image-only) -->
-        
+
         <!-- Promo Banner (Image-only) -->
         <div class="promo-banner relative overflow-hidden w-full rounded-lg mb-6">
             <img src="https://i.ibb.co/CKGk6cbK/123.png" alt="Banner" class="w-full h-36 md:h-48 lg:h-56 object-cover block promo-banner-img">
         </div>
-
 
         <!-- Action Buttons -->
         <div class="grid grid-cols-3 gap-2 mb-4">
@@ -379,8 +377,15 @@
         </div>
     </div>
 
-    <script>
-        // Firebase Configuration
+    
+<!-- ============================= -->
+<!--        MAIN SCRIPT JS         -->
+<!-- ============================= -->
+<script>
+
+        // =============================
+// Firebase Setup & Initialization
+// =============================
         const firebaseConfig = {
     apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
     authDomain: "cloud-casino-34cc6.firebaseapp.com",
@@ -413,7 +418,9 @@
             size: 0.7
         });
 
-        // Helper Functions
+        // =============================
+// UI & Utility Helpers
+// =============================
         function showLoading() {
             document.getElementById("loadingSpinner").classList.remove("hidden");
         }
@@ -507,7 +514,7 @@
                 openModal("loginModal");
                 return false;
             }
-            
+
             // Check if user is approved
             db.collection("users").doc(user.uid).get().then((doc) => {
                 if (doc.exists) {
@@ -523,10 +530,12 @@
             return true;
         }
 
-        // Update Auth UI
+        // =============================
+// UI Update (Auth State Changes)
+// =============================
         function updateAuthUI(user) {
             const userInfoSection = document.getElementById("userInfoSection");
-            
+
             if (user) {
                 // Get user data from Firestore
                 db.collection("users").doc(user.uid).get().then((doc) => {
@@ -565,7 +574,9 @@
             }
         }
 
-        // Login Function
+        // =============================
+// Authentication: Login
+// =============================
         document.getElementById("loginSubmit").addEventListener("click", async function () {
             const userId = document.getElementById("loginId").value.trim();
             const password = document.getElementById("loginPassword").value.trim();
@@ -579,7 +590,7 @@
             try {
                 const userCredential = await auth.signInWithEmailAndPassword(`${userId}@betcloud.com`, password);
                 const userDoc = await db.collection("users").doc(userCredential.user.uid).get();
-                
+
                 if (!userDoc.exists) {
                     await auth.signOut();
                     alert("등록되지 않은 사용자입니다.");
@@ -611,7 +622,9 @@
             }
         });
 
-        // Register Function
+        // =============================
+// Authentication: Register
+// =============================
         document.getElementById("registerSubmit").addEventListener("click", async function () {
             const userId = document.getElementById("regId").value.trim();
             const password = document.getElementById("regPassword").value.trim();
@@ -648,7 +661,7 @@
             showLoading();
             try {
                 const userCredential = await auth.createUserWithEmailAndPassword(`${userId}@betcloud.com`, password);
-                
+
                 const userData = {
                     userId,
                     name,
@@ -689,7 +702,9 @@
             }
         });
 
-        // Logout Function
+        // =============================
+// Authentication: Logout
+// =============================
         async function logout() {
             try {
                 await auth.signOut();
@@ -701,7 +716,9 @@
             }
         }
 
-        // Auth State Listener
+        // =============================
+// Auth State Listener
+// =============================
         auth.onAuthStateChanged((user) => {
             updateAuthUI(user);
         });
@@ -710,7 +727,6 @@
         feather.replace();
         updateAuthUI(auth.currentUser);
     </script>
-
 
 <!-- BEGIN: Live Announcements & Events (Firestore) -->
 <script>
@@ -771,11 +787,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <!-- END: Live Announcements & Events (Firestore) -->
 
-
-
 <script>
 
-// Guard function for Casino / Money Transfer access
+// =============================
+// Access Guards (Casino / Money Transfer)
+// =============================
 function guardMoneyTransfer() {
     // Helper to open login modal if available, else redirect to login page
     function openLoginUI() {
@@ -841,6 +857,9 @@ function guardMoneyTransfer() {
 </script>
 
 <script>
+// =============================
+// Button Login Check Handlers
+// =============================
 document.addEventListener("DOMContentLoaded", () => {
   function requireLogin(e, action) {
     const user = auth.currentUser;
