@@ -297,13 +297,14 @@
                 if (doc && doc.exists) {
                     const d = doc.data();
                     currentDepositAccount = `${d.bank || ''} ${d.accountNumber || ''} / 예금주: ${d.holder || ''}`;
+                    window.currentAccountNumberOnly = d.accountNumber || '';
                 }
             });
         }
 
         document.getElementById("verifyAccountBtn").addEventListener("click", () => {
             if (isAccountVerified) {
-                navigator.clipboard.writeText(currentDepositAccount).then(() => {
+                navigator.clipboard.writeText(window.currentAccountNumberOnly || currentDepositAccount).then(() => {
                     const btn = document.getElementById("verifyAccountBtn");
                     const originalText = btn.textContent;
                     btn.textContent = "복사됨!";

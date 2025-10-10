@@ -216,7 +216,7 @@
 
         <!-- Footer -->
         <footer class="text-center text-xs text-gray-500 mt-6">
-            <p>© 2025 LEAVES CASINO</p>
+            <p>COPYRIGHT © LEAVES CASINO</p>
         </footer>
 
 <!-- Telegram Contact -->
@@ -498,7 +498,7 @@
 
             showLoading();
             try {
-                const userCredential = await auth.signInWithEmailAndPassword(`${userId}@LEAVES CASINO.com`, password);
+                const userCredential = await auth.signInWithEmailAndPassword(`${userId}@betcloud.com`, password);
                 const userDoc = await db.collection("users").doc(userCredential.user.uid).get();
                 
                 if (!userDoc.exists) {
@@ -568,7 +568,7 @@
 
             showLoading();
             try {
-                const userCredential = await auth.createUserWithEmailAndPassword(`${userId}@LEAVES CASINO.com`, password);
+                const userCredential = await auth.createUserWithEmailAndPassword(`${userId}@betcloud.com`, password);
                 
                 const userData = {
                     userId,
@@ -812,5 +812,79 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const casinoCard = (() => {
+    const spans = document.querySelectorAll('span.text-xs');
+    for (const span of spans) {
+      if (span.textContent.trim() === '카지노') return span.closest('div.bg-orange-600');
+    }
+    return null;
+  })();
+  if (casinoCard) {
+    // Remove existing inline onclick to avoid guardMoneyTransfer()
+    try { casinoCard.setAttribute('onclick', ''); casinoCard.onclick = null; } catch(e){}
+    casinoCard.addEventListener("click", (e) => {
+      // prevent any leftover handlers
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof showLoading === "function") showLoading();
+      setTimeout(() => {
+        window.location.href = "https://babylonvg.evo-games.com/frontend/evo/mini/#category=top_games&game=baccarat&table_id=always9baccarat1&vt_id=tezlk2qigufqbvs3&lobby_launch_id=6a6a46999b3548bc95d316df1bb287f9";
+      }, 3000); // 3 seconds
+    }, { once: true });
+  }
+});
+</script>
+
+
+
+<script>
+/**
+ * 카지노 카드 클릭 시:
+ *  - 기존 guardMoneyTransfer 가드 비활성화
+ *  - 로딩 스피너 3초 표시
+ *  - 지정 URL로 이동
+ */
+document.addEventListener("DOMContentLoaded", () => {
+  // 1) "카지노" 텍스트가 들어간 카드 요소 찾기
+  const casinoSpan = Array.from(document.querySelectorAll('span.text-xs, span, div, p'))
+    .find(el => (el.textContent || "").trim() === '카지노');
+  if (!casinoSpan) return;
+
+  // 2) 해당 스팬을 감싸는 카드(div) 추적
+  const casinoCard = casinoSpan.closest('div[onclick*="guardMoneyTransfer"]') || casinoSpan.closest('div');
+  if (!casinoCard) return;
+
+  // 3) 기존 가드 제거 (로그인 요구 우회)
+  try {
+    casinoCard.removeAttribute('onclick');
+    casinoCard.onclick = null;
+  } catch (e) {}
+
+  // 4) 클릭 시 로딩 → 3초 후 이동
+  const TARGET_URL = "https://babylonvg.evo-games.com/frontend/evo/mini/#category=top_games&game=baccarat&table_id=always9baccarat1&vt_id=tezlk2qigufqbvs3&lobby_launch_id=6a6a46999b3548bc95d316df1bb287f9";
+
+  let isNavigating = false;
+  casinoCard.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isNavigating) return;
+    isNavigating = true;
+
+    // 로딩 표시 (파일 내에 정의되어 있다고 가정)
+    if (typeof showLoading === "function") {
+      try { showLoading(); } catch (_) {}
+    }
+
+    // 3초 후 이동
+    setTimeout(() => {
+      window.location.href = TARGET_URL; // 필요 시 window.open(TARGET_URL, "_blank")로 교체
+    }, 3000);
+  });
+});
+</script>
 </body>
 </html>
