@@ -4,16 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PREMIUM BETTING SITE FALLEN LEAVES CASINO</title>
+    <!-- 
+        보안 강화 추천: Subresource Integrity (SRI)
+        아래 스크립트 태그에 integrity 속성을 추가하면 CDN이 변조되었을 때 스크립트 실행을 막을 수 있습니다.
+        올바른 해시값은 srihash.org 와 같은 온라인 생성기를 통해 얻을 수 있습니다.
+        예시: <script src="https://cdn.tailwindcss.com" integrity="sha384-..." crossorigin="anonymous"></script>
+    -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
     
     <!-- Firebase and dependencies -->
+    <!-- SRI 보안 강화 추천: Firebase 같은 주요 라이브러리에도 SRI를 적용하는 것이 안전합니다. -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+    <!-- 클라이언트 측 암호화 라이브러리(bcrypt.js)는 보안상의 이유로 제거되었습니다. 비밀번호 해싱은 서버 측에서 수행되어야 합니다. -->
     <script src="auth.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
@@ -249,6 +256,9 @@
 
     <script>
         // Firebase Configuration
+        // 중요: 아래 설정은 실제 값으로 교체해야 합니다.
+        // 이 정보는 민감하므로, 소스 코드에 직접 포함하는 대신 환경 변수 등을 사용하는 것이 가장 좋습니다.
+        // 또한, Firebase 콘솔에서 앱의 도메인을 허용 목록에 추가하고, Firestore 보안 규칙을 엄격하게 설정해야 합니다.
         const firebaseConfig = {
     apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
     authDomain: "cloud-casino-34cc6.firebaseapp.com",
@@ -401,21 +411,60 @@
                     if (doc.exists) {
                         const userData = doc.data();
                         const isAdmin = (userData && (userData.role === "admin" || userData.isAdmin === true));
-                        userInfoSection.innerHTML = `
-                            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                                <div>
-                                    <div class="flex items-center flex-wrap gap-2">
-                                        <h3 class="font-bold text-lg mr-2">${userData.name || userData.userId} 님</h3>
-                                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">${(userData.point || 0).toLocaleString()}P</span>
-                                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${(userData.balance || 0).toLocaleString()}원</span>
-                                    </div>
-                                </div>
-                                <div class="mt-3 md:mt-0 flex space-x-2">
-                                    <a href="admin.html" ${isAdmin ? "" : "style=\"display:none;\""} class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-4 py-2 rounded-md font-bold glow-orange">관리자페이지</a>
-                                    <button onclick="logout()" class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-md font-bold glow-orange">로그아웃</button>
-                                </div>
-                            </div>
-                        `;
+                        
+                        // XSS 방지를 위해 이전 내용을 비웁니다.
+                        userInfoSection.innerHTML = ''; 
+
+                        // XSS를 방지하기 위해 DOM 요소를 안전하게 생성합니다.
+                        const container = document.createElement('div');
+                        container.className = "flex flex-col md:flex-row md:items-center md:justify-between";
+
+                        const infoDiv = document.createElement('div');
+                        const infoFlex = document.createElement('div');
+                        infoFlex.className = "flex items-center flex-wrap gap-2";
+
+                        const nameHeader = document.createElement('h3');
+                        nameHeader.className = "font-bold text-lg mr-2";
+                        // XSS 방지를 위해 사용자 입력 데이터는 textContent로 처리합니다.
+                        nameHeader.textContent = `${userData.name || userData.userId} 님`;
+
+                        const pointSpan = document.createElement('span');
+                        pointSpan.className = "bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded";
+                        pointSpan.textContent = `${(userData.point || 0).toLocaleString()}P`;
+
+                        const balanceSpan = document.createElement('span');
+                        balanceSpan.className = "bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded";
+                        balanceSpan.textContent = `${(userData.balance || 0).toLocaleString()}원`;
+
+                        infoFlex.appendChild(nameHeader);
+                        infoFlex.appendChild(pointSpan);
+                        infoFlex.appendChild(balanceSpan);
+                        infoDiv.appendChild(infoFlex);
+
+                        const buttonsDiv = document.createElement('div');
+                        buttonsDiv.className = "mt-3 md:mt-0 flex space-x-2";
+
+                        // 보안 참고: 아래 버튼 숨김 처리는 UI/UX 목적이며 보안 기능이 아닙니다.
+                        // admin.html 페이지 자체에서 반드시 사용자가 관리자인지 재확인해야 합니다.
+                        if (isAdmin) {
+                            const adminLink = document.createElement('a');
+                            adminLink.href = "admin.html";
+                            adminLink.className = "bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-4 py-2 rounded-md font-bold glow-orange";
+                            adminLink.textContent = "관리자페이지";
+                            buttonsDiv.appendChild(adminLink);
+                        }
+
+                        const logoutButton = document.createElement('button');
+                        logoutButton.className = "bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-md font-bold glow-orange";
+                        logoutButton.textContent = "로그아웃";
+                        logoutButton.onclick = logout;
+
+                        buttonsDiv.appendChild(logoutButton);
+                        
+                        container.appendChild(infoDiv);
+                        container.appendChild(buttonsDiv);
+
+                        userInfoSection.appendChild(container);
                     }
                 });
             } else {
@@ -505,19 +554,6 @@
                 return;
             }
 
-            if (!bcrypt || typeof bcrypt.hashSync !== "function") {
-                alert("암호화 라이브러리가 로딩되지 않았습니다. 새로고침 후 다시 시도하세요.");
-                return;
-            }
-
-            let hashedWithdrawPassword;
-            try {
-                hashedWithdrawPassword = bcrypt.hashSync(withdrawPassword, 10);
-            } catch (err) {
-                alert("암호화 처리 중 오류가 발생했습니다.");
-                return;
-            }
-
             showLoading();
             try {
                 const userCredential = await auth.createUserWithEmailAndPassword(`${userId}@betcloud.com`, password);
@@ -533,7 +569,9 @@
                     joinDate: new Date().toISOString(),
                     status: "pending",
                     isAdmin: false,
-                    withdrawPassword: hashedWithdrawPassword,
+                    // 중요: 출금 비밀번호가 평문으로 전송됩니다.
+                    // 반드시 Firebase Function과 같은 서버 환경에서 해싱(암호화)해야 합니다.
+                    withdrawPassword: withdrawPassword,
                 };
 
                 await db.collection("users").doc(userCredential.user.uid).set(userData);

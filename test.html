@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mac Style Browser</title>
+<style>
+  body {
+    margin: 0;
+    background: #f5f5f7;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  .window {
+    width: 900px;
+    height: 600px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  .titlebar {
+    height: 35px;
+    background: #ebebeb;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .close { background: #ff5f57; }
+  .minimize { background: #ffbd2e; }
+  .maximize { background: #28c840; }
+  iframe {
+    width: 100%;
+    height: calc(100% - 35px);
+    border: none;
+  }
+</style>
+</head>
+<body>
+  <div class="window">
+    <div class="titlebar">
+      <div class="btn close"></div>
+      <div class="btn minimize"></div>
+      <div class="btn maximize"></div>
+    </div>
+    <iframe src="https://www.google.com"></iframe>
+  </div>
+</body>
+</html>
