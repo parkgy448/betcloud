@@ -14,65 +14,437 @@
         @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
         body {
             font-family: 'Oxanium', sans-serif;
-            background-color: #0a0a12;
-            color: white;
-            background-image: url('https://www.transparenttextures.com/patterns/dark-leaves.png');
+            background: linear-gradient(135deg, #1a1a0e 0%, #2d1b0e 25%, #3d2817 50%, #2d1b0e 75%, #1a1a0e 100%);
+            color: #f4e4c1;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(160, 82, 45, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(205, 133, 63, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
         .main-container {
-            background: rgba(10, 10, 18, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 102, 0, 0.2);
+            background: linear-gradient(145deg, rgba(26, 26, 14, 0.95) 0%, rgba(45, 27, 14, 0.95) 100%);
+            backdrop-filter: blur(15px);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            z-index: 2;
         }
+        
+        .main-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, rgba(139, 69, 19, 0.3), rgba(160, 82, 45, 0.2), rgba(205, 133, 63, 0.1));
+            border-radius: inherit;
+            z-index: -1;
+        }
+        
+        .message-table {
+            background: rgba(26, 26, 14, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
         .message-table th, .message-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(255, 102, 0, 0.2);
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.3);
         }
+        
         .message-table th {
-            background: linear-gradient(to bottom, rgba(255, 102, 0, 0.15), rgba(255, 102, 0, 0.05));
-            font-weight: 600;
+            background: linear-gradient(135deg, rgba(139, 69, 19, 0.4) 0%, rgba(160, 82, 45, 0.3) 50%, rgba(205, 133, 63, 0.2) 100%);
+            font-weight: 700;
             text-align: center;
-            color: #ff8c00;
+            color: #f4e4c1;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            letter-spacing: 0.5px;
         }
+        
+        .message-table tr {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
         .message-table tr:hover {
-            background-color: rgba(255, 102, 0, 0.05);
+            background: linear-gradient(90deg, rgba(139, 69, 19, 0.2) 0%, rgba(160, 82, 45, 0.15) 50%, rgba(205, 133, 63, 0.1) 100%);
             cursor: pointer;
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
         }
+        
         .unread td:first-child {
-            border-left: 3px solid #ffc107;
+            border-left: 4px solid #d4af37;
+            position: relative;
         }
+        
+        .unread td:first-child::before {
+            content: '';
+            position: absolute;
+            left: -4px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #d4af37, #b8860b);
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
+        }
+        
         .unread {
-            font-weight: bold;
-            color: #ffc107;
+            font-weight: 700;
+            color: #d4af37;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
+        
         .action-btn {
-            transition: all 0.2s ease-in-out;
+            background: linear-gradient(135deg, #8b4513 0%, #a0522d 50%, #cd853f 100%);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
         }
+        
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(184, 134, 11, 0.1));
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
         .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+        }
+        
+        .action-btn:hover::before {
+            opacity: 1;
+        }
+        
+        .action-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        #selectAllBtn {
+            background: linear-gradient(135deg, #2d5016 0%, #3d6b1a 50%, #4a7c1f 100%);
+        }
+        
+        #deleteSelectedBtn {
+            background: linear-gradient(135deg, #8b0000 0%, #a52a2a 50%, #cd5c5c 100%);
+        }
+        
+        #markAsReadBtn {
+            background: linear-gradient(135deg, #2d5016 0%, #3d6b1a 50%, #4a7c1f 100%);
+        }
+        
+        .header-title {
+            color: #d4af37;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header-subtitle {
+            color: #cd853f;
+        }
+        
+        .checkbox-style {
+            accent-color: #d4af37;
+            transform: scale(1.2);
+        }
+        
+        .modal-container {
+            background: linear-gradient(145deg, rgba(26, 26, 14, 0.98) 0%, rgba(45, 27, 14, 0.98) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .no-messages-icon {
+            color: #8b4513;
+            opacity: 0.6;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-read {
+            background: linear-gradient(135deg, #2d5016, #3d6b1a);
+            color: #90ee90;
+        }
+        
+        .status-unread {
+            background: linear-gradient(135deg, #8b4513, #a0522d);
+            color: #d4af37;
+        }
+        
+        /* 로딩 애니메이션 */
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a0e 0%, #2d1b0e 25%, #3d2817 50%, #2d1b0e 75%, #1a1a0e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-container.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .leaves-loader {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .leaf {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #d4af37, #b8860b);
+            border-radius: 50% 0;
+            animation: fall 2s infinite ease-in-out;
+        }
+        
+        .leaf:nth-child(1) {
+            left: 10px;
+            animation-delay: 0s;
+        }
+        
+        .leaf:nth-child(2) {
+            left: 30px;
+            animation-delay: 0.3s;
+        }
+        
+        .leaf:nth-child(3) {
+            left: 50px;
+            animation-delay: 0.6s;
+        }
+        
+        .leaf:nth-child(4) {
+            left: 20px;
+            animation-delay: 0.9s;
+        }
+        
+        .leaf:nth-child(5) {
+            left: 40px;
+            animation-delay: 1.2s;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(-20px) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(20px) rotate(180deg);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(40px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .loading-text {
+            color: #d4af37;
+            font-size: 18px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.7;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+        
+        /* 페이지 전환 효과 */
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a0e 0%, #2d1b0e 50%, #3d2817 100%);
+            z-index: 9998;
+            transform: translateX(-100%);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .page-transition.slide-in {
+            transform: translateX(0);
+        }
+        
+        .page-transition.slide-out {
+            transform: translateX(100%);
+        }
+        
+        /* 요소 등장 애니메이션 */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .fade-in-up:nth-child(1) { animation-delay: 0.1s; }
+        .fade-in-up:nth-child(2) { animation-delay: 0.2s; }
+        .fade-in-up:nth-child(3) { animation-delay: 0.3s; }
+        .fade-in-up:nth-child(4) { animation-delay: 0.4s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 메시지 행 애니메이션 */
+        .message-row {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideInFromLeft 0.6s ease-out forwards;
+        }
+        
+        .message-row:nth-child(odd) {
+            animation-delay: 0.1s;
+        }
+        
+        .message-row:nth-child(even) {
+            animation-delay: 0.2s;
+        }
+        
+        @keyframes slideInFromLeft {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* 버튼 클릭 효과 */
+        .button-click-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button-click-effect::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.3) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+        
+        .button-click-effect:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        
+        /* 모달 등장 효과 */
+        .modal-enter {
+            animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        /* 스크롤 애니메이션 */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body class="min-h-screen">
+    <!-- 로딩 화면 -->
+    <div id="loadingScreen" class="loading-container">
+        <div class="leaves-loader">
+            <div class="leaf"></div>
+            <div class="leaf"></div>
+            <div class="leaf"></div>
+            <div class="leaf"></div>
+            <div class="leaf"></div>
+        </div>
+        <div class="loading-text">낙엽카지노</div>
+    </div>
+
     <div class="relative z-10 container mx-auto px-4 py-8">
         <header class="flex justify-center items-center fixed top-0 left-0 w-full z-50 bg-black/60 backdrop-blur-md py-3">
             <a href="index.html"><img src="https://i.ibb.co/xdhYSGr/logo.png" alt="LEAVES Logo" class="h-12 md:h-16 object-contain"></a>
         </header>
 
         <main class="mt-20">
-            <div class="main-container rounded-lg p-6 shadow-lg">
-                <div class="flex items-center mb-6">
-                    <i data-feather="mail" class="w-8 h-8 text-orange-400 mr-3"></i>
+            <div class="main-container rounded-lg p-6 shadow-lg fade-in-up">
+                <div class="flex items-center mb-6 fade-in-up">
+                    <i data-feather="mail" class="w-8 h-8 text-yellow-400 mr-3" style="color: #d4af37;"></i>
                     <div>
-                        <h2 class="text-2xl font-bold text-orange-400">내쪽지함</h2>
-                        <p class="text-gray-400 text-sm">Message Box</p>
+                        <h2 class="text-2xl font-bold header-title">내쪽지함</h2>
+                        <p class="header-subtitle text-sm">Message Box</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 mb-4">
-                    <button id="selectAllBtn" class="action-btn bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded">전체선택</button>
-                    <button id="deleteSelectedBtn" class="action-btn bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-4 rounded">선택삭제</button>
-                    <button id="markAsReadBtn" class="action-btn bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded">선택읽기</button>
+                <div class="flex items-center gap-3 mb-6 fade-in-up">
+                    <button id="selectAllBtn" class="action-btn text-white text-sm font-bold py-3 px-6 rounded-lg button-click-effect">전체선택</button>
+                    <button id="deleteSelectedBtn" class="action-btn text-white text-sm font-bold py-3 px-6 rounded-lg button-click-effect">선택삭제</button>
+                    <button id="markAsReadBtn" class="action-btn text-white text-sm font-bold py-3 px-6 rounded-lg button-click-effect">선택읽기</button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -90,38 +462,49 @@
                         </tbody>
                     </table>
                 </div>
-                 <div id="no-messages" class="text-center py-12 text-gray-500">
-                    <i data-feather="inbox" class="w-16 h-16 mx-auto mb-4 text-orange-500/50"></i>
-                    <p>받은 쪽지가 없습니다.</p>
+                 <div id="no-messages" class="text-center py-12 text-gray-400">
+                    <i data-feather="inbox" class="w-16 h-16 mx-auto mb-4 no-messages-icon"></i>
+                    <p class="text-lg">받은 쪽지가 없습니다.</p>
                 </div>
             </div>
         </main>
     </div>
 
     <!-- Message Modal -->
-    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden">
-        <div class="main-container rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="modal-container rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto modal-enter">
             <div class="flex justify-between items-center mb-4">
-                <h3 id="modalTitle" class="font-bold text-lg text-orange-400"></h3>
-                <button id="closeModalBtn" class="text-gray-400 hover:text-white">
+                <h3 id="modalTitle" class="font-bold text-lg header-title"></h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-white transition-colors button-click-effect">
                     <i data-feather="x"></i>
                 </button>
             </div>
-            <div id="modalContent" class="text-gray-300 whitespace-pre-wrap"></div>
+            <div id="modalContent" class="text-gray-300 whitespace-pre-wrap leading-relaxed"></div>
         </div>
     </div>
 
     <script src="firebase-config.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // 로딩 화면 표시
+            showLoadingScreen();
+            
             feather.replace();
 
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    loadMessages(user.uid);
-                    setupButtonListeners(user.uid);
+                    // 로딩 완료 후 애니메이션 시작
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        loadMessages(user.uid);
+                        setupButtonListeners(user.uid);
+                        initScrollAnimations();
+                    }, 1500);
                 } else {
-                    window.location.href = 'index.html';
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        window.location.href = 'index.html';
+                    }, 1000);
                 }
             });
 
@@ -156,17 +539,17 @@
                     const messageId = doc.id;
                     const row = document.createElement('tr');
                     row.dataset.id = messageId;
-                    row.className = message.read ? '' : 'unread';
+                    row.className = message.read ? 'message-row' : 'unread message-row';
 
                     const formattedDate = message.timestamp ? new Date(message.timestamp.seconds * 1000).toLocaleString('ko-KR', {
                         year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
                     }).replace(/\. /g, '-').replace(/\./g, '') : 'N/A';
 
                     row.innerHTML = `
-                        <td class="text-center"><input type="checkbox" class="message-checkbox bg-gray-700 rounded" data-id="${messageId}"></td>
+                        <td class="text-center"><input type="checkbox" class="message-checkbox checkbox-style" data-id="${messageId}"></td>
                         <td>${message.title}</td>
                         <td class="text-center">${formattedDate}</td>
-                        <td class="text-center">${message.read ? '읽음' : '안읽음'}</td>
+                        <td class="text-center"><span class="status-badge ${message.read ? 'status-read' : 'status-unread'}">${message.read ? '읽음' : '안읽음'}</span></td>
                     `;
 
                     row.addEventListener('click', (e) => {
@@ -259,6 +642,88 @@
                 });
             });
         }
+
+        // 로딩 화면 관련 함수들
+        function showLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'flex';
+            }
+        }
+
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                loadingScreen.classList.add('fade-out');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        // 스크롤 애니메이션 초기화
+        function initScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                    }
+                });
+            }, observerOptions);
+
+            // 스크롤 애니메이션 대상 요소들 관찰
+            document.querySelectorAll('.scroll-reveal').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // 페이지 전환 효과
+        function createPageTransition() {
+            const transition = document.createElement('div');
+            transition.className = 'page-transition';
+            document.body.appendChild(transition);
+            
+            setTimeout(() => {
+                transition.classList.add('slide-in');
+            }, 10);
+            
+            setTimeout(() => {
+                transition.classList.add('slide-out');
+                setTimeout(() => {
+                    document.body.removeChild(transition);
+                }, 600);
+            }, 300);
+        }
+
+        // 링크 클릭 시 페이지 전환 효과
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('a[href]')) {
+                const link = e.target.closest('a[href]');
+                if (link.href && !link.href.includes('#')) {
+                    e.preventDefault();
+                    createPageTransition();
+                    setTimeout(() => {
+                        window.location.href = link.href;
+                    }, 300);
+                }
+            }
+        });
+
+        // 버튼 클릭 효과 강화
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.button-click-effect')) {
+                const button = e.target.closest('.button-click-effect');
+                button.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    button.style.transform = '';
+                }, 150);
+            }
+        });
     </script>
 </body>
 </html>

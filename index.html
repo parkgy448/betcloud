@@ -40,6 +40,141 @@
             50% { opacity: 0.8; }
             100% { opacity: 1; }
         }
+        
+        /* 페이지 전환 효과 */
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a0e 0%, #2d1b0e 50%, #3d2817 100%);
+            z-index: 9998;
+            transform: translateX(-100%);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .page-transition.slide-in {
+            transform: translateX(0);
+        }
+        
+        .page-transition.slide-out {
+            transform: translateX(100%);
+        }
+        
+        /* 카드 클릭 효과 */
+        .game-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255, 102, 0, 0.3) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+            z-index: 1;
+        }
+        
+        .game-card:active::before {
+            width: 200px;
+            height: 200px;
+        }
+        
+        .game-card:active {
+            transform: scale(0.95);
+        }
+        
+        /* 로딩 애니메이션 */
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a0e 0%, #2d1b0e 25%, #3d2817 50%, #2d1b0e 75%, #1a1a0e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-container.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .leaves-loader {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .leaf {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #ff6600, #ff8c00);
+            border-radius: 50% 0;
+            animation: fall 2s infinite ease-in-out;
+        }
+        
+        .leaf:nth-child(1) {
+            left: 10px;
+            animation-delay: 0s;
+        }
+        
+        .leaf:nth-child(2) {
+            left: 30px;
+            animation-delay: 0.3s;
+        }
+        
+        .leaf:nth-child(3) {
+            left: 50px;
+            animation-delay: 0.6s;
+        }
+        
+        .leaf:nth-child(4) {
+            left: 20px;
+            animation-delay: 0.9s;
+        }
+        
+        .leaf:nth-child(5) {
+            left: 40px;
+            animation-delay: 1.2s;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(-20px) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(20px) rotate(180deg);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(40px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .loading-text {
+            color: #ff6600;
+            font-size: 18px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            animation: pulse 1.5s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="min-h-screen pt-11">
@@ -105,7 +240,7 @@
         <!-- Game Grid -->
         <div class="grid grid-cols-3 gap-2 mb-6">
             <!-- Row 1 -->
-            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-md aspect-square flex flex-col items-center justify-center relative" onclick="handleGameClick('https://prod20293.442hattrick.com')">
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-md aspect-square flex flex-col items-center justify-center relative game-card" onclick="handleGameClickWithTransition('https://prod20293.442hattrick.com')">
                 <i data-feather="flag" class="w-8 h-8 mb-2"></i>
                 <span class="text-xs">스포츠</span>
             </div>
@@ -131,7 +266,7 @@
                 <span class="text-xs">미니게임</span>
             </div>
             <!-- Row 3 -->
-            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="handleGameClick('https://babylonvg.evo-games.com/frontend/evo/mini/#category=top_games&game=baccarat&table_id=always9baccarat1&vt_id=tezlk2qigufqbvs3&lobby_launch_id=6a6a46999b3548bc95d316df1bb287f9')">
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center game-card" onclick="handleGameClickWithTransition('https://babylonvg.evo-games.com/frontend/evo/mini/#category=top_games&game=baccarat&table_id=always9baccarat1&vt_id=tezlk2qigufqbvs3&lobby_launch_id=6a6a46999b3548bc95d316df1bb287f9')">
                 <i data-feather="layers" class="w-8 h-8 mb-2"></i>
                 <span class="text-xs">카지노</span>
             </div>
@@ -460,6 +595,89 @@
                 console.error("Error getting user data:", error);
                 alert("오류가 발생했습니다. 다시 시도해주세요.");
             });
+        }
+
+        // 페이지 전환 효과가 있는 게임 클릭 핸들러
+        function handleGameClickWithTransition(url) {
+            const user = auth.currentUser;
+            if (!user) {
+                openModal("loginModal");
+                return;
+            }
+
+            db.collection("users").doc(user.uid).get().then((doc) => {
+                if (!doc.exists || doc.data().status !== "active") {
+                    alert("승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
+                    return;
+                }
+
+                // 페이지 전환 효과 시작
+                createPageTransition();
+                
+                // 전환 효과 후 게임 로딩
+                setTimeout(() => {
+                    const overlay = document.getElementById('redirectOverlay');
+                    const card = document.getElementById('redirectCard');
+                    const message = document.getElementById('redirectMessage');
+                    const progressBar = document.getElementById('progressBar');
+
+                    if (!overlay || !card || !message || !progressBar) return;
+
+                    // Reset and show overlay
+                    message.textContent = '로딩중...';
+                    progressBar.style.width = '0%';
+                    overlay.classList.remove('hidden');
+                    
+                    // Animate in
+                    requestAnimationFrame(() => {
+                        card.classList.remove('scale-95', 'opacity-0');
+                    });
+
+                    // Step 1: Loading
+                    setTimeout(() => {
+                        progressBar.style.width = '50%';
+                        
+                        // Step 2: Redirecting
+                        setTimeout(() => {
+                            message.textContent = '이동중...';
+                            progressBar.style.width = '100%';
+
+                            // Step 3: Open URL and hide
+                            setTimeout(() => {
+                                window.open(url, '_blank');
+                                
+                                // Animate out
+                                card.classList.add('scale-95', 'opacity-0');
+                                setTimeout(() => {
+                                    overlay.classList.add('hidden');
+                                }, 300); // Match animation duration
+
+                            }, 500); // A brief moment to see the "Redirecting" state
+                        }, 1000); // Loading duration
+                    }, 100); // Short delay to allow animation-in to start
+                }, 300); // 페이지 전환 효과 대기 시간
+            }).catch(error => {
+                console.error("Error getting user data:", error);
+                alert("오류가 발생했습니다. 다시 시도해주세요.");
+            });
+        }
+
+        // 페이지 전환 효과 생성
+        function createPageTransition() {
+            const transition = document.createElement('div');
+            transition.className = 'page-transition';
+            document.body.appendChild(transition);
+            
+            setTimeout(() => {
+                transition.classList.add('slide-in');
+            }, 10);
+            
+            setTimeout(() => {
+                transition.classList.add('slide-out');
+                setTimeout(() => {
+                    document.body.removeChild(transition);
+                }, 600);
+            }, 300);
         }
 
         function guardGameAccess(gameType) {
