@@ -1589,20 +1589,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     updatedAt: new Date().toISOString(),
                 })
                 .then(() => {
-                    alert("입금 계좌가 저장되었습니다");
-                    
-                    const message = {
-                        title: `입금계좌 변경 안내`,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    };
-                    return db.collection("messages").add(message);
-                })
-                .then(() => {
-                    console.log("Bank account change message posted successfully.");
+                    alert("입금 계좌가 저장되었습니다. 모든 사용자에게 쪽지가 전송됩니다.");
                 })
                 .catch((e) => {
-                    console.error("Error saving account or posting message:", e);
-                    alert("저장 또는 쪽지 전송 실패: " + e.message);
+                    console.error("Error saving account:", e);
+                    alert("저장 실패: " + e.message);
                 })
                 .finally(hideLoading);
         });

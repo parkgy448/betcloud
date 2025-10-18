@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 쪽지함 - 낙엽카지노</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="auth.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Oxanium', sans-serif;
+            background-color: #0a0a12;
+            color: white;
+        }
+        .message-box {
+            background-color: #1a1a2e;
+            border: 1px solid #ff6600;
+        }
+        .message-header {
+            background-color: #2a2a3e;
+        }
+        .message-row:hover {
+            background-color: #2a2a3e;
+        }
+        .btn-action {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-action:hover {
+            transform: translateY(-2px);
+        }
+        .btn-blue {
+            background-color: #1e40af;
+            color: white;
+        }
+        .btn-red {
+            background-color: #be123c;
+            color: white;
+        }
+        .btn-green {
+            background-color: #16a34a;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="relative z-10 container mx-auto px-4 py-8">
+        <header class="flex justify-between items-center mb-6">
+            <a href="index.html" class="text-orange-400 hover:text-orange-300">
+                <i data-feather="arrow-left" class="w-8 h-8"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-orange-400">내 쪽지함</h1>
+            <div></div>
+        </header>
+
+        <div class="message-box rounded-lg overflow-hidden">
+            <div class="p-4 flex justify-start space-x-2">
+                <button class="btn-action btn-blue px-4 py-2 rounded-md text-sm font-semibold">전체선택</button>
+                <button class="btn-action btn-red px-4 py-2 rounded-md text-sm font-semibold">선택삭제</button>
+                <button class="btn-action btn-green px-4 py-2 rounded-md text-sm font-semibold">선택읽기</button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="message-header">
+                        <tr>
+                            <th class="p-3 w-12 text-center">선택</th>
+                            <th class="p-3">제목</th>
+                            <th class="p-3 w-32 text-center">받은일시</th>
+                            <th class="p-3 w-20 text-center">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="message-list">
+                        <!-- Messages will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
+            authDomain: "cloud-casino-34cc6.firebaseapp.com",
+            projectId: "cloud-casino-34cc6",
+            storageBucket: "cloud-casino-34cc6.firebasestorage.app",
+            messagingSenderId: "289867400095",
+            appId: "1:289867400095:web:c9060c2a534225db9cf3aa"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        function fetchMessages() {
+            const user = auth.currentUser;
+            if (!user) {
+                // Handle not logged in user
+                return;
+            }
+
+            const messageList = document.getElementById('message-list');
+            db.collection("users").doc(user.uid).collection("messages").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                messageList.innerHTML = '';
+                if (snapshot.empty) {
+                    messageList.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-gray-400">받은 쪽지가 없습니다.</td></tr>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const message = doc.data();
+                    const messageRow = `
+                        <tr class="message-row border-t border-gray-700 ${message.read ? '' : 'font-bold'}">
+                            <td class="p-3 text-center"><input type="checkbox" class="bg-gray-800 border-gray-600"></td>
+                            <td class="p-3">${message.title}</td>
+                            <td class="p-3 text-center">${new Date(message.timestamp.seconds * 1000).toLocaleString()}</td>
+                            <td class="p-3 text-center">${message.read ? '읽음' : '안읽음'}</td>
+                        </tr>
+                    `;
+                    messageList.innerHTML += messageRow;
+                });
+            });
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                fetchMessages();
+            } else {
+                // Redirect to login if not authenticated
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+        });
+    </script>
+</body>
+</html>
