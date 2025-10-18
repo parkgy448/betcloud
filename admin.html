@@ -287,8 +287,8 @@
     </div>
 
     
-        <!-- Notices Tab (공지사항 관리) -->
-        <div id="noticesTab" class="tab-content">
+        <!-- Content Tab (formerly Notices) -->
+        <div id="contentTab" class="tab-content">
 <div class="p-4 bg-gray-900 rounded-md mt-4">
   <h2 class="font-bold mb-2">관리자: 공지사항 / 이벤트 관리</h2>
 
@@ -468,22 +468,33 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
         </div>
 
-        <!-- Send Message Tab -->
-        <div id="sendMessageTab" class="tab-content">
-            <div class="bg-gray-800 rounded-lg p-6">
-                <h3 class="font-bold mb-4">전체 사용자에게 쪽지 보내기</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">쪽지 제목</label>
-                        <input type="text" id="messageTitle" class="w-full bg-gray-700 rounded p-2" placeholder="쪽지 제목">
+        <!-- Message Management Tab -->
+        <div id="messageTab" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Send Message Form -->
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="font-bold mb-4 text-orange-400">전체 사용자에게 쪽지 보내기</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">쪽지 제목</label>
+                            <input type="text" id="messageTitle" class="w-full bg-gray-700 rounded p-2" placeholder="쪽지 제목">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">쪽지 내용</label>
+                            <textarea id="messageContent" class="w-full bg-gray-700 rounded p-2" rows="5" placeholder="쪽지 내용"></textarea>
+                        </div>
+                        <button id="sendMessageBtn" class="w-full bg-orange-500 hover:bg-orange-600 py-3 rounded-lg font-bold">
+                            전체 발송
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">쪽지 내용</label>
-                        <textarea id="messageContent" class="w-full bg-gray-700 rounded p-2" rows="5" placeholder="쪽지 내용"></textarea>
+                </div>
+
+                <!-- Sent Messages List -->
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="font-bold mb-4 text-orange-400">보낸 쪽지 목록</h3>
+                    <div id="sentMessagesList" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Sent messages will be populated here -->
                     </div>
-                    <button id="sendMessageBtn" class="w-full bg-orange-500 hover:bg-orange-600 py-3 rounded-lg font-bold">
-                        전체 발송
-                    </button>
                 </div>
             </div>
         </div>
@@ -586,6 +597,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="bg-gray-800 rounded-lg p-6 flex items-center">
             <i data-feather="loader" class="w-8 h-8 text-orange-500 animate-spin mr-3"></i>
             <span>처리 중...</span>
+        </div>
+    </div>
+
+        <!-- Message View Modal -->
+    <div id="messageViewModal" class="modal hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-lg">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="viewModalTitle" class="font-bold text-lg text-orange-400"></h3>
+                <button onclick="closeModal('messageViewModal')" class="text-gray-400 hover:text-white">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div id="viewModalContent" class="text-gray-300 whitespace-pre-wrap max-h-80 overflow-y-auto"></div>
         </div>
     </div>
 
@@ -1642,94 +1666,109 @@ document.addEventListener('DOMContentLoaded', () => {
                 .finally(hideLoading);
         });
 
-        // Send custom message to all users
-        document.getElementById("sendMessageBtn").addEventListener("click", () => {
-            const title = document.getElementById("messageTitle").value.trim();
-            const content = document.getElementById("messageContent").value.trim();
-            
-            if (!title || !content) {
-                alert("제목과 내용을 모두 입력하세요.");
-                return;
-            }
+// Send custom message to all users and log it
+document.getElementById("sendMessageBtn").addEventListener("click", () => {
+    const title = document.getElementById("messageTitle").value.trim();
+    const content = document.getElementById("messageContent").value.trim();
 
-            if (!confirm("정말로 모든 사용자에게 이 쪽지를 보내시겠습니까?")) {
-                return;
-            }
+    if (!title || !content) {
+        alert("제목과 내용을 모두 입력하세요.");
+        return;
+    }
 
-            showLoading();
-            
-            const message = {
-                title: title,
-                content: content,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                read: false
-            };
+    if (!confirm("정말로 모든 사용자에게 이 쪽지를 보내시겠습니까?")) {
+        return;
+    }
 
-            db.collection("users").get().then(querySnapshot => {
-                if (querySnapshot.empty) {
-                    alert("메시지를 보낼 사용자가 없습니다.");
-                    hideLoading();
-                    return;
-                }
-                const batch = db.batch();
-                querySnapshot.forEach(userDoc => {
-                    const userMessagesRef = db.collection("users").doc(userDoc.id).collection("messages").doc();
-                    batch.set(userMessagesRef, message);
-                });
-                return batch.commit().then(() => querySnapshot.size); // Pass the size to the next then
-            }).then((userCount) => {
-                alert(`모든 사용자 (${userCount}명)에게 쪽지 전송을 완료했습니다.`);
-                document.getElementById("messageTitle").value = "";
-                document.getElementById("messageContent").value = "";
-            }).catch(error => {
-                console.error("쪽지 전송 오류: ", error);
-                alert("사용자에게 쪽지를 전송하는 중 오류가 발생했습니다.");
-            }).finally(() => {
-                hideLoading();
+    showLoading();
+
+    const message = {
+        title: title,
+        content: content,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+    };
+
+    // 1. Log the message to sentMessages collection
+    db.collection("sentMessages").add(message)
+    .then(() => db.collection("users").get())
+    .then(querySnapshot => {
+        if (querySnapshot.empty) {
+            alert("메시지를 보낼 사용자가 없습니다.");
+            hideLoading();
+            return;
+        }
+        const batch = db.batch();
+        querySnapshot.forEach(userDoc => {
+            const userMessagesRef = db.collection("users").doc(userDoc.id).collection("messages").doc();
+            batch.set(userMessagesRef, message);
+        });
+        return batch.commit().then(() => querySnapshot.size);
+    })
+    .then(userCount => {
+        alert(`모든 사용자 (${userCount}명)에게 쪽지 전송을 완료했습니다.`);
+        document.getElementById("messageTitle").value = "";
+        document.getElementById("messageContent").value = "";
+        loadSentMessages(); // Refresh the sent messages list
+    })
+    .catch(error => {
+        console.error("쪽지 전송 오류: ", error);
+        alert("사용자에게 쪽지를 전송하는 중 오류가 발생했습니다.");
+    })
+    .finally(() => hideLoading());
+});
+
+// Load Sent Messages
+function loadSentMessages() {
+    const listContainer = document.getElementById("sentMessagesList");
+    if (!listContainer) return;
+
+    db.collection("sentMessages")
+      .orderBy("timestamp", "desc")
+      .limit(20)
+      .onSnapshot(snapshot => {
+        if (snapshot.empty) {
+            listContainer.innerHTML = `<p class="text-gray-500 text-center">보낸 쪽지가 없습니다.</p>`;
+            return;
+        }
+
+        listContainer.innerHTML = "";
+        snapshot.forEach(doc => {
+            const message = doc.data();
+            const messageId = doc.id;
+            const formattedDate = message.timestamp
+                ? new Date(message.timestamp.seconds * 1000).toLocaleString("ko-KR")
+                : "N/A";
+
+            const item = document.createElement("div");
+            item.className = "bg-gray-700 p-3 rounded-lg flex justify-between items-center";
+            item.innerHTML = `
+                <div>
+                    <p class="font-bold">${message.title}</p>
+                    <p class="text-xs text-gray-400">${formattedDate}</p>
+                </div>
+                <div>
+                    <button class="admin-action-btn info view-btn">보기</button>
+                    <button class="admin-action-btn reject delete-btn">삭제</button>
+                </div>
+            `;
+
+            item.querySelector(".view-btn").addEventListener("click", () => {
+                document.getElementById("viewModalTitle").textContent = message.title;
+                document.getElementById("viewModalContent").textContent = message.content;
+                openModal("messageViewModal");
             });
+
+            item.querySelector(".delete-btn").addEventListener("click", () => {
+                if (confirm(`'${message.title}' 쪽지를 삭제하시겠습니까? 이 작업은 보낸 쪽지 기록에서만 삭제됩니다.`)) {
+                    db.collection("sentMessages").doc(messageId).delete();
+                }
+            });
+
+            listContainer.appendChild(item);
         });
-
-        // Password Change Functionality
-        document.getElementById("pwApplyBtn").addEventListener("click", async () => {
-            try {
-                const p1 = document.getElementById("pwNew1").value.trim();
-                const p2 = document.getElementById("pwNew2").value.trim();
-                if (p1 !== p2) throw new Error("두 비밀번호가 일치하지 않습니다");
-                
-                if (p1.length < 8 || p1.length > 64) {
-                    throw new Error("비밀번호는 8~64자로 설정하세요");
-                }
-
-                const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^\w\s]/].reduce((acc, re) => acc + (re.test(p1) ? 1 : 0), 0);
-                if (classes < 2) {
-                    throw new Error("영문/숫자/특수문자 중 2종 이상을 포함하세요");
-                }
-
-                if (!(window.firebase && firebase.functions)) {
-                    throw new Error("Firebase Functions가 초기화되지 않았습니다");
-                }
-
-                const callSet = regionCallable("adminSetPassword");
-                const target = window.PW_CHANGE_TARGET;
-
-                const payload = {
-                    mode: "auth",
-                    uid: target.uid,
-                    userDocId: target.userDocId,
-                    loginId: target.loginId,
-                    newPassword: p1,
-                    forceChangeNext: !!document.getElementById("pwForceChangeNext").checked,
-                };
-
-                const { data } = await callSet(payload);
-
-                alert(`비밀번호 변경 완료\n대상: ${document.getElementById("pwTargetDisplay").value}\n감사ID: ${data?.auditId || "-"}`);
-                closeModal("pwChangeModal");
-            } catch (err) {
-                console.error(err);
-                alert(formatFunctionsError(err) || "처리 중 오류가 발생했습니다");
-            }
-        });
+    });
+}
 
         // Tab Management
         function setupAdminTabs() {
@@ -1773,12 +1812,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         case "account":
                             loadDepositAccount();
                             break;
-                        case "notices":
+                        case "content":
                             // 공지사항 관리 로드
                             loadAdminItems();
                             break;
-                        case "sendMessage":
-                            // No data to load for this tab
+                        case "message":
+                            loadSentMessages();
                             break;
                     }
                 });
