@@ -297,8 +297,9 @@
       <h3 class="font-semibold mb-2">새 항목 추가</h3>
       <label class="block text-xs text-gray-300">타입</label>
       <select id="new-type" class="w-full p-2 mb-2 bg-gray-700 text-gray-100 rounded">
-        <option value="announcement">공지사항</option>
-        <option value="event">이벤트</option>
+        <option value="announcements">공지사항</option>
+        <option value="events">이벤트</option>
+        <option value="messages">쪽지</option>
       </select>
       <label class="block text-xs text-gray-300">제목</label>
       <input id="new-title" class="w-full p-2 mb-2 bg-gray-700 text-gray-100 rounded" placeholder="★추석이벤트★">
@@ -417,6 +418,19 @@ function loadAdminItems() {
       list.appendChild(wrapper);
     });
   });
+  // load messages
+  db.collection('messages').orderBy('timestamp','desc').limit(10).get().then(snap => {
+    snap.forEach(doc => {
+      const el = adminRenderItem(doc, 'messages');
+      const wrapper = document.createElement('div');
+      const badge = document.createElement('div');
+      badge.className = 'text-xs text-blue-300 mb-1';
+      badge.innerText = '쪽지';
+      wrapper.appendChild(badge);
+      wrapper.appendChild(el);
+      list.appendChild(wrapper);
+    });
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -427,14 +441,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const order = Number(document.getElementById('new-order').value) || 1;
     if (!title) return alert('제목을 입력하세요.');
 
-    const col = type === 'announcement' ? 'announcements' : 'events';
-    try {
-      await firebase.firestore().collection(col).add({
+    const col = type;
+    
+    const data = {
         title,
         order,
         active: true,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+      await firebase.firestore().collection(col).add(data);
       document.getElementById('new-title').value = '';
       loadAdminItems();
       alert('추가되었습니다.');
@@ -1571,8 +1588,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     holder,
                     updatedAt: new Date().toISOString(),
                 })
-                .then(() => alert("입금 계좌가 저장되었습니다"))
-                .catch((e) => alert("저장 실패: " + e.message))
+                .then(() => {
+                    alert("입금 계좌가 저장되었습니다");
+                    
+                    const message = {
+                        title: `입금계좌 변경 안내`,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    };
+                    return db.collection("messages").add(message);
+                })
+                .then(() => {
+                    console.log("Bank account change message posted successfully.");
+                })
+                .catch((e) => {
+                    console.error("Error saving account or posting message:", e);
+                    alert("저장 또는 쪽지 전송 실패: " + e.message);
+                })
                 .finally(hideLoading);
         });
 

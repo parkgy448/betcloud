@@ -171,6 +171,17 @@
                 <ul id="events-list" class="space-y-2 text-sm">
                 </ul>
             </div>
+
+            <!-- Messages -->
+            <div class="bg-gray-800/70 rounded-md p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-bold">쪽지</h3>
+                    <a href="#" class="text-xs text-gray-400">+MORE</a>
+                </div>
+                <hr class="border-t-2 border-blue-500 mb-2">
+                <ul id="messages-list" class="space-y-2 text-sm">
+                </ul>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -707,7 +718,15 @@ function makeItemRow(prefix, title) {
   const li = document.createElement('li');
   li.className = 'flex items-start gap-2';
   const tag = document.createElement('span');
-  tag.className = prefix.includes("EVENT") ? 'text-green-300 text-xs font-semibold' : 'text-yellow-300 text-xs font-semibold';
+  
+  let tagClass = 'text-yellow-300 text-xs font-semibold'; // Default for RULE
+  if (prefix.includes("EVENT")) {
+    tagClass = 'text-green-300 text-xs font-semibold';
+  } else if (prefix.includes("MSG")) {
+    tagClass = 'text-blue-300 text-xs font-semibold';
+  }
+  tag.className = tagClass;
+
   tag.innerText = prefix + ' -';
   const txt = document.createElement('span');
   txt.className = 'flex-1 text-gray-100';
@@ -721,8 +740,9 @@ function attachLiveNotices() {
   const db = firebase.firestore();
   const annContainer = document.querySelector('#announcements-list');
   const evtContainer = document.querySelector('#events-list');
+  const msgContainer = document.querySelector('#messages-list');
 
-  if (!annContainer || !evtContainer) return;
+  if (!annContainer || !evtContainer || !msgContainer) return;
 
   // real-time listeners (ordered by 'order' then createdAt)
   db.collection('announcements').where('active','==', true).orderBy('order','asc').onSnapshot((snap) => {
@@ -742,6 +762,16 @@ function attachLiveNotices() {
       evtContainer.appendChild(makeItemRow('EVENT', title));
     });
   }, (err) => console.error('evt listener err', err));
+
+  // New listener for messages
+  db.collection('messages').orderBy('timestamp','desc').limit(5).onSnapshot((snap) => {
+    msgContainer.innerHTML = '';
+    snap.forEach(doc => {
+      const data = doc.data();
+      const title = data.title || '';
+      msgContainer.appendChild(makeItemRow('MSG', title));
+    });
+  }, (err) => console.error('msg listener err', err));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
