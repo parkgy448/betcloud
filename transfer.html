@@ -6,6 +6,13 @@
   <title>자금 이체 | 버튼-비밀번호 위치 변경</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/feather-icons"></script>
+  
+  <!-- Firebase and dependencies -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="auth.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
     body { font-family: 'Oxanium', sans-serif; background:#0a0a12; color:#fff; }
@@ -162,212 +169,134 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 
-<!-- BEGIN: Game <-> Casino Money Conversion Script (added by ChatGPT) -->
+<!-- BEGIN: Game <-> Casino Money Conversion Script -->
 <script>
-// === Money conversion logic for transfer.html ===
-// 안전: Firestore 트랜잭션으로 두 필드를 동시에 업데이트하고, transferLogs에 기록합니다.
-
-// Helper: show/hide loading (간단 버전 — 프로젝트의 기존 showLoading/hideLoading가 있으면 사용)
-function showLoading(text) {
-  if (typeof window.showLoading === 'function') { window.showLoading(text); return; }
-  let el = document.getElementById('__tc_loading');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = '__tc_loading';
-    el.style = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);color:white;z-index:9999';
-    el.innerText = text || '처리중...';
-    document.body.appendChild(el);
-  }
-  el.innerText = text || '처리중...';
-  el.style.display = 'flex';
-}
-function hideLoading(){
-  if (typeof window.hideLoading === 'function') { window.hideLoading(); return; }
-  const el = document.getElementById('__tc_loading');
-  if (el) el.style.display = 'none';
-}
-
-// 안전성: 버튼에 id가 없으면 붙여주기 (transfer.html 샘플 버튼이 id 없음). 기존 DOM에 id를 추가합니다.
-(function ensureButtons(){
-  const toCasinoBtn = document.querySelector('button.bg-orange-600') || document.querySelector('button:contains("카지노머니로 전환")');
-  const toGameBtn = document.querySelector('button.bg-blue-600') || document.querySelector('button:contains("게임머니로 전환")');
-  if (toCasinoBtn && !toCasinoBtn.id) toCasinoBtn.id = '__toCasinoBtn';
-  if (toGameBtn && !toGameBtn.id) toGameBtn.id = '__toGameBtn';
-})();
-
-// 안전한 읽기 함수: 유저 document에서 가능한 여러 필드 이름을 받아서 금액을 구함
-function _getUserBalancesSnapshot(userData){
-  // game side: prefer `balance`, fallback `gameBalance` or `gameMoney`
-  const game = userData.balance ?? userData.gameBalance ?? userData.gameMoney ?? 0;
-  const casino = userData.casinoBalance ?? 0;
-  return { game: Number(game)||0, casino: Number(casino)||0 };
-}
-
-// 공통: 출금 비밀번호 검증 (bcrypt 사용)
-function verifyWithdrawPassword(plainPwd, storedPwd){
-  if (!plainPwd) return false;
-  const BCRYPT = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
-  const looksHashed = /^\$2[aby]\$/.test(storedPwd || '');
-  if (looksHashed) {
-    if (!BCRYPT || typeof BCRYPT.compareSync !== 'function') throw new Error('암호화 라이브러리가 로딩되지 않았습니다.');
-    return BCRYPT.compareSync(plainPwd, storedPwd);
-  } else {
-    // legacy plaintext fallback (demo only)
-    return plainPwd === storedPwd;
-  }
-}
-
-// 전환 트랜잭션: 게임머니 -> 카지노머니
-async function convertGameToCasino(amount, plainPwd){
-  if (!auth || !db) throw new Error('Firebase가 초기화되어 있지 않습니다.');
-  const user = auth.currentUser;
-  if (!user) throw new Error('로그인이 필요합니다.');
-  if (!Number.isInteger(amount) || amount <= 0) throw new Error('유효한 금액을 입력하세요.');
-
-  showLoading('카지노 머니로 전환 중...');
-  try {
-    await db.runTransaction(async (tx) => {
-      const userRef = db.collection('users').doc(user.uid);
-      const userSnap = await tx.get(userRef);
-      if (!userSnap.exists) throw new Error('사용자 정보를 찾을 수 없습니다.');
-      const ud = userSnap.data();
-      // verify pw
-      const storedPwd = ud.withdrawPassword || '';
-      if (!verifyWithdrawPassword(plainPwd, storedPwd)) throw new Error('출금 비밀번호가 일치하지 않습니다.');
-
-      const { game: prevGame, casino: prevCasino } = _getUserBalancesSnapshot(ud);
-      if (prevGame < amount) throw new Error('보유 게임머니가 부족합니다.');
-
-      // update fields (원자적)
-      const newGame = prevGame - amount;
-      const newCasino = prevCasino + amount;
-      tx.update(userRef, {
-        // 유지되는 기존 네임스페이스에 맞춰서 업데이트
-        balance: newGame, // 주 거래용 필드
-        casinoBalance: newCasino
-      });
-
-      // 로그 남기기
-      const logRef = db.collection('transferLogs').doc();
-      tx.set(logRef, {
-        userId: user.uid,
-        type: 'game_to_casino',
-        amount,
-        prevGame,
-        prevCasino,
-        newGame,
-        newCasino,
-        date: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
-
-    // UI 갱신 (간단)
-    alert(amount.toLocaleString() + '원 → 카지노머니 전환 완료');
-    // 만약 페이지에 현재 잔액을 표시하는 함수가 있다면 호출
-    if (typeof window.refreshBalance === 'function') window.refreshBalance();
-    if (typeof window.updateUserBalance === 'function') window.updateUserBalance(auth.currentUser);
-  } finally {
-    hideLoading();
-  }
-}
-
-// 전환 트랜잭션: 카지노머니 -> 게임머니
-async function convertCasinoToGame(amount, plainPwd){
-  if (!auth || !db) throw new Error('Firebase가 초기화되어 있지 않습니다.');
-  const user = auth.currentUser;
-  if (!user) throw new Error('로그인이 필요합니다.');
-  if (!Number.isInteger(amount) || amount <= 0) throw new Error('유효한 금액을 입력하세요.');
-
-  showLoading('게임 머니로 전환 중...');
-  try {
-    await db.runTransaction(async (tx) => {
-      const userRef = db.collection('users').doc(user.uid);
-      const userSnap = await tx.get(userRef);
-      if (!userSnap.exists) throw new Error('사용자 정보를 찾을 수 없습니다.');
-      const ud = userSnap.data();
-
-      // verify pw
-      const storedPwd = ud.withdrawPassword || '';
-      if (!verifyWithdrawPassword(plainPwd, storedPwd)) throw new Error('출금 비밀번호가 일치하지 않습니다.');
-
-      const { game: prevGame, casino: prevCasino } = _getUserBalancesSnapshot(ud);
-      if (prevCasino < amount) throw new Error('보유 카지노머니가 부족합니다.');
-
-      const newGame = prevGame + amount;
-      const newCasino = prevCasino - amount;
-      tx.update(userRef, {
-        balance: newGame,
-        casinoBalance: newCasino
-      });
-
-      const logRef = db.collection('transferLogs').doc();
-      tx.set(logRef, {
-        userId: user.uid,
-        type: 'casino_to_game',
-        amount,
-        prevGame,
-        prevCasino,
-        newGame,
-        newCasino,
-        date: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
-
-    alert(amount.toLocaleString() + '원 ← 카지노머니에서 게임머니로 전환 완료');
-    if (typeof window.refreshBalance === 'function') window.refreshBalance();
-    if (typeof window.updateUserBalance === 'function') window.updateUserBalance(auth.currentUser);
-  } finally {
-    hideLoading();
-  }
-}
-
-// UI binding: 전환 버튼 클릭 처리
-function setupTransferBindings(){
-  const toCasinoBtn = document.getElementById('__toCasinoBtn');
-  const toGameBtn = document.getElementById('__toGameBtn');
-  // 금액 입력 요소 탐색: transfer.html 샘플에서는 입력 요소가 하나 있음
-  const amountInput = document.querySelector('section input[type="text"]') || document.querySelector('input[placeholder*="입력"]');
-
-  if (!amountInput) {
-    console.warn('전환 금액 입력 요소를 찾지 못했습니다. 수동으로 amount 값을 넣어 호출하세요.');
-  }
-
-  if (toCasinoBtn) {
-    toCasinoBtn.addEventListener('click', async () => {
-      try {
-        const raw = amountInput ? amountInput.value.replace(/[^0-9]/g,'') : '';
-        const amount = parseInt(raw || '', 10);
-        if (!amount || amount <= 0) return alert('전환할 금액을 입력해주세요');
-        const pw = prompt('출금 비밀번호를 입력하세요');
-        if (pw === null) return;
-        await convertGameToCasino(amount, pw);
-      } catch (err) {
-        alert('오류: ' + (err.message || err));
-        console.error(err);
-      }
-    });
-  }
-
-  if (toGameBtn) {
-    toGameBtn.addEventListener('click', async () => {
-      try {
-        const raw = amountInput ? amountInput.value.replace(/[^0-9]/g,'') : '';
-        const amount = parseInt(raw || '', 10);
-        if (!amount || amount <= 0) return alert('전환할 금액을 입력해주세요');
-        const pw = prompt('출금 비밀번호를 입력하세요');
-        if (pw === null) return;
-        await convertCasinoToGame(amount, pw);
-      } catch (err) {
-        alert('오류: ' + (err.message || err));
-        console.error(err);
-      }
-    });
-  }
-}
-
-// 초기화
 document.addEventListener('DOMContentLoaded', () => {
-  setupTransferBindings();
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const functions = firebase.app().functions("asia-northeast3");
+
+    let currentUser = null;
+    const gameBalanceEl = document.querySelector('.grid div:nth-child(1) div.font-extrabold');
+    const casinoBalanceEl = document.querySelector('.grid div:nth-child(2) div.font-extrabold');
+    const amountInput = document.querySelector('section input[type="text"]');
+    const passwordInput = document.getElementById('pw');
+    const toCasinoBtn = document.querySelector('button.bg-orange-600');
+    const toGameBtn = document.querySelector('button.bg-blue-600');
+
+    // Quick amount buttons
+    document.querySelectorAll('button[class*="bg-gray-700"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const amountText = btn.textContent;
+            let amount = 0;
+            if (amountText.includes('만')) {
+                amount = parseInt(amountText) * 10000;
+            } else if (amountText.includes('십만')) {
+                 amount = parseInt(amountText) * 100000;
+            }
+            if(amount > 0) amountInput.value = amount;
+        });
+    });
+
+    function showLoading(text) {
+        const ov = document.getElementById('overlay');
+        if (ov) {
+            ov.querySelector('.font-bold').textContent = text || '처리중...';
+            ov.classList.remove('hidden');
+        }
+    }
+
+    function hideLoading() {
+        const ov = document.getElementById('overlay');
+        if (ov) ov.classList.add('hidden');
+    }
+
+    async function updateUserBalances() {
+        if (!currentUser || !gameBalanceEl || !casinoBalanceEl) return;
+        const userRef = db.collection('users').doc(currentUser.uid);
+        try {
+            const doc = await userRef.get();
+            if (doc.exists) {
+                const userData = doc.data();
+                const gameBalance = userData.balance || 0;
+                const casinoBalance = userData.casinoBalance || 0;
+                gameBalanceEl.textContent = gameBalance.toLocaleString() + ' 원';
+                casinoBalanceEl.textContent = casinoBalance.toLocaleString() + ' 원';
+            }
+        } catch (error) {
+            console.error("Error fetching user balances:", error);
+            gameBalanceEl.textContent = '에러';
+            casinoBalanceEl.textContent = '에러';
+        }
+    }
+
+    async function handleTransfer(direction) {
+        if (!currentUser) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        const amount = parseInt(amountInput.value.replace(/[^0-9]/g, ''), 10);
+        const password = passwordInput.value;
+
+        if (isNaN(amount) || amount <= 0) {
+            alert('유효한 금액을 입력하세요.');
+            return;
+        }
+        if (!password) {
+            alert('출금 비밀번호를 입력하세요.');
+            return;
+        }
+
+        const from = direction === 'to_casino' ? 'game' : 'casino';
+        const to = direction === 'to_casino' ? 'casino' : 'game';
+
+        showLoading(`${to === 'casino' ? '카지노 머니로' : '게임 머니로'} 전환 중...`);
+
+        try {
+            const userToken = await currentUser.getIdToken();
+            const functionUrl = 'https://asia-northeast3-cloud-casino-34cc6.cloudfunctions.net/transferMoney';
+
+            const response = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + userToken,
+                },
+                body: JSON.stringify({ data: { amount, from, to, password } })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || '서버에서 오류가 발생했습니다.');
+            }
+
+            alert('자금 전환이 완료되었습니다.');
+            passwordInput.value = '';
+            await updateUserBalances();
+
+        } catch (error) {
+            console.error('Transfer error:', error);
+            alert(`오류: ${error.message}`);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            updateUserBalances();
+            if(toCasinoBtn) toCasinoBtn.addEventListener('click', () => handleTransfer('to_casino'));
+            if(toGameBtn) toGameBtn.addEventListener('click', () => handleTransfer('to_game'));
+        } else {
+            gameBalanceEl.textContent = '로그인 필요';
+            casinoBalanceEl.textContent = '로그인 필요';
+            alert('로그인이 필요합니다.');
+            window.location.href = 'index.html';
+        }
+    });
 });
 </script>
 <!-- END: Game <-> Casino Money Conversion Script -->
