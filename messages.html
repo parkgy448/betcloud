@@ -9,138 +9,256 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
         body {
             font-family: 'Oxanium', sans-serif;
             background-color: #0a0a12;
             color: white;
+            background-image: url('https://www.transparenttextures.com/patterns/dark-leaves.png');
         }
-        .message-box {
-            background-color: #1a1a2e;
-            border: 1px solid #ff6600;
+        .main-container {
+            background: rgba(10, 10, 18, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 102, 0, 0.2);
         }
-        .message-header {
-            background-color: #2a2a3e;
+        .message-table th, .message-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 102, 0, 0.2);
         }
-        .message-row:hover {
-            background-color: #2a2a3e;
+        .message-table th {
+            background: linear-gradient(to bottom, rgba(255, 102, 0, 0.15), rgba(255, 102, 0, 0.05));
+            font-weight: 600;
+            text-align: center;
+            color: #ff8c00;
         }
-        .btn-action {
+        .message-table tr:hover {
+            background-color: rgba(255, 102, 0, 0.05);
+            cursor: pointer;
+        }
+        .unread td:first-child {
+            border-left: 3px solid #ffc107;
+        }
+        .unread {
+            font-weight: bold;
+            color: #ffc107;
+        }
+        .action-btn {
             transition: all 0.2s ease-in-out;
         }
-        .btn-action:hover {
+        .action-btn:hover {
             transform: translateY(-2px);
-        }
-        .btn-blue {
-            background-color: #1e40af;
-            color: white;
-        }
-        .btn-red {
-            background-color: #be123c;
-            color: white;
-        }
-        .btn-green {
-            background-color: #16a34a;
-            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body class="min-h-screen">
     <div class="relative z-10 container mx-auto px-4 py-8">
-        <header class="flex justify-between items-center mb-6">
-            <a href="index.html" class="text-orange-400 hover:text-orange-300">
-                <i data-feather="arrow-left" class="w-8 h-8"></i>
-            </a>
-            <h1 class="text-2xl font-bold text-orange-400">내 쪽지함</h1>
-            <div></div>
+        <header class="flex justify-center items-center fixed top-0 left-0 w-full z-50 bg-black/60 backdrop-blur-md py-3">
+            <a href="index.html"><img src="https://i.ibb.co/xdhYSGr/logo.png" alt="LEAVES Logo" class="h-12 md:h-16 object-contain"></a>
         </header>
 
-        <div class="message-box rounded-lg overflow-hidden">
-            <div class="p-4 flex justify-start space-x-2">
-                <button class="btn-action btn-blue px-4 py-2 rounded-md text-sm font-semibold">전체선택</button>
-                <button class="btn-action btn-red px-4 py-2 rounded-md text-sm font-semibold">선택삭제</button>
-                <button class="btn-action btn-green px-4 py-2 rounded-md text-sm font-semibold">선택읽기</button>
-            </div>
+        <main class="mt-20">
+            <div class="main-container rounded-lg p-6 shadow-lg">
+                <div class="flex items-center mb-6">
+                    <i data-feather="mail" class="w-8 h-8 text-orange-400 mr-3"></i>
+                    <div>
+                        <h2 class="text-2xl font-bold text-orange-400">내쪽지함</h2>
+                        <p class="text-gray-400 text-sm">Message Box</p>
+                    </div>
+                </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm text-left">
-                    <thead class="message-header">
-                        <tr>
-                            <th class="p-3 w-12 text-center">선택</th>
-                            <th class="p-3">제목</th>
-                            <th class="p-3 w-32 text-center">받은일시</th>
-                            <th class="p-3 w-20 text-center">상태</th>
-                        </tr>
-                    </thead>
-                    <tbody id="message-list">
-                        <!-- Messages will be dynamically inserted here -->
-                    </tbody>
-                </table>
+                <div class="flex items-center gap-2 mb-4">
+                    <button id="selectAllBtn" class="action-btn bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded">전체선택</button>
+                    <button id="deleteSelectedBtn" class="action-btn bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-4 rounded">선택삭제</button>
+                    <button id="markAsReadBtn" class="action-btn bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded">선택읽기</button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm text-left message-table">
+                        <thead>
+                            <tr>
+                                <th class="w-16 rounded-tl-lg">선택</th>
+                                <th>제목</th>
+                                <th class="w-40">받은일시</th>
+                                <th class="w-24 rounded-tr-lg">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messages-container">
+                            <!-- Messages will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                 <div id="no-messages" class="text-center py-12 text-gray-500">
+                    <i data-feather="inbox" class="w-16 h-16 mx-auto mb-4 text-orange-500/50"></i>
+                    <p>받은 쪽지가 없습니다.</p>
+                </div>
             </div>
+        </main>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden">
+        <div class="main-container rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalTitle" class="font-bold text-lg text-orange-400"></h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-white">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="text-gray-300 whitespace-pre-wrap"></div>
         </div>
     </div>
 
+    <script src="firebase-config.js"></script>
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
-            authDomain: "cloud-casino-34cc6.firebaseapp.com",
-            projectId: "cloud-casino-34cc6",
-            storageBucket: "cloud-casino-34cc6.firebasestorage.app",
-            messagingSenderId: "289867400095",
-            appId: "1:289867400095:web:c9060c2a534225db9cf3aa"
-        };
+        document.addEventListener("DOMContentLoaded", () => {
+            feather.replace();
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    loadMessages(user.uid);
+                    setupButtonListeners(user.uid);
+                } else {
+                    window.location.href = 'index.html';
+                }
+            });
 
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+            // Modal listeners
+            const messageModal = document.getElementById('messageModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            closeModalBtn.addEventListener('click', () => messageModal.classList.add('hidden'));
+            messageModal.addEventListener('click', (e) => {
+                if (e.target === messageModal) {
+                    messageModal.classList.add('hidden');
+                }
+            });
+        });
 
-        function fetchMessages() {
-            const user = auth.currentUser;
-            if (!user) {
-                // Handle not logged in user
-                return;
-            }
-
-            const messageList = document.getElementById('message-list');
-            db.collection("users").doc(user.uid).collection("messages").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-                messageList.innerHTML = '';
+        function loadMessages(userId) {
+            const messagesContainer = document.getElementById('messages-container');
+            const noMessagesDiv = document.getElementById('no-messages');
+            
+            db.collection('users').doc(userId).collection('messages')
+              .orderBy('timestamp', 'desc')
+              .onSnapshot(snapshot => {
                 if (snapshot.empty) {
-                    messageList.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-gray-400">받은 쪽지가 없습니다.</td></tr>';
+                    messagesContainer.innerHTML = '';
+                    noMessagesDiv.style.display = 'block';
                     return;
                 }
+                
+                noMessagesDiv.style.display = 'none';
+                messagesContainer.innerHTML = '';
                 snapshot.forEach(doc => {
                     const message = doc.data();
-                    const messageRow = `
-                        <tr class="message-row border-t border-gray-700 ${message.read ? '' : 'font-bold'}">
-                            <td class="p-3 text-center"><input type="checkbox" class="bg-gray-800 border-gray-600"></td>
-                            <td class="p-3">${message.title}</td>
-                            <td class="p-3 text-center">${new Date(message.timestamp.seconds * 1000).toLocaleString()}</td>
-                            <td class="p-3 text-center">${message.read ? '읽음' : '안읽음'}</td>
-                        </tr>
+                    const messageId = doc.id;
+                    const row = document.createElement('tr');
+                    row.dataset.id = messageId;
+                    row.className = message.read ? '' : 'unread';
+
+                    const formattedDate = message.timestamp ? new Date(message.timestamp.seconds * 1000).toLocaleString('ko-KR', {
+                        year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                    }).replace(/\. /g, '-').replace(/\./g, '') : 'N/A';
+
+                    row.innerHTML = `
+                        <td class="text-center"><input type="checkbox" class="message-checkbox bg-gray-700 rounded" data-id="${messageId}"></td>
+                        <td>${message.title}</td>
+                        <td class="text-center">${formattedDate}</td>
+                        <td class="text-center">${message.read ? '읽음' : '안읽음'}</td>
                     `;
-                    messageList.innerHTML += messageRow;
+
+                    row.addEventListener('click', (e) => {
+                        if (e.target.type === 'checkbox') return; // Don't open modal if checkbox is clicked
+                        showMessageModal(message.title, message.content, messageId, userId);
+                    });
+
+                    messagesContainer.appendChild(row);
                 });
             });
         }
 
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                fetchMessages();
-            } else {
-                // Redirect to login if not authenticated
-                window.location.href = 'index.html';
-            }
-        });
+        function showMessageModal(title, content, messageId, userId) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalContent').textContent = content;
+            document.getElementById('messageModal').classList.remove('hidden');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            feather.replace();
-        });
+            // Mark as read
+            db.collection('users').doc(userId).collection('messages').doc(messageId).update({ read: true });
+        }
+
+        function setupButtonListeners(userId) {
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+            const markAsReadBtn = document.getElementById('markAsReadBtn');
+            const messagesContainer = document.getElementById('messages-container');
+
+            // Select All
+            let isAllSelected = false;
+            selectAllBtn.addEventListener('click', () => {
+                const checkboxes = messagesContainer.querySelectorAll('.message-checkbox');
+                isAllSelected = !isAllSelected;
+                checkboxes.forEach(checkbox => checkbox.checked = isAllSelected);
+                selectAllBtn.textContent = isAllSelected ? '선택해제' : '전체선택';
+            });
+
+            // Get Selected IDs
+            const getSelectedIds = () => {
+                const selected = [];
+                messagesContainer.querySelectorAll('.message-checkbox:checked').forEach(checkbox => {
+                    selected.push(checkbox.dataset.id);
+                });
+                return selected;
+            };
+
+            // Delete Selected
+            deleteSelectedBtn.addEventListener('click', () => {
+                const selectedIds = getSelectedIds();
+                if (selectedIds.length === 0) {
+                    alert('삭제할 쪽지를 선택하세요.');
+                    return;
+                }
+                if (!confirm(`선택한 ${selectedIds.length}개의 쪽지를 삭제하시겠습니까?`)) {
+                    return;
+                }
+
+                const batch = db.batch();
+                selectedIds.forEach(id => {
+                    const docRef = db.collection('users').doc(userId).collection('messages').doc(id);
+                    batch.delete(docRef);
+                });
+
+                batch.commit().then(() => {
+                    alert('선택한 쪽지를 삭제했습니다.');
+                }).catch(error => {
+                    console.error("Error deleting messages: ", error);
+                    alert('쪽지 삭제 중 오류가 발생했습니다.');
+                });
+            });
+
+            // Mark as Read
+            markAsReadBtn.addEventListener('click', () => {
+                const selectedIds = getSelectedIds();
+                if (selectedIds.length === 0) {
+                    alert('읽음으로 표시할 쪽지를 선택하세요.');
+                    return;
+                }
+
+                const batch = db.batch();
+                selectedIds.forEach(id => {
+                    const docRef = db.collection('users').doc(userId).collection('messages').doc(id);
+                    batch.update(docRef, { read: true });
+                });
+
+                batch.commit().then(() => {
+                    alert('선택한 쪽지를 읽음으로 표시했습니다.');
+                }).catch(error => {
+                    console.error("Error marking messages as read: ", error);
+                    alert('쪽지를 읽음으로 표시하는 중 오류가 발생했습니다.');
+                });
+            });
+        }
     </script>
 </body>
 </html>

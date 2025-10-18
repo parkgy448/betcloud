@@ -142,7 +142,8 @@
             <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="exchanges">환전 관리</button>
             <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="chats">고객문의</button>
             <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="account">계좌 설정</button>
-            <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="notices">공지사항 관리</button>
+            <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="content">콘텐츠 관리</button>
+            <button class="admin-tab px-6 py-3 font-bold whitespace-nowrap" data-tab="message">쪽지 관리</button>
         </div>
 
         <!-- Search Box (for users tab) -->
@@ -465,6 +466,26 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAdminItems();
 });
 </script>
+        </div>
+
+        <!-- Send Message Tab -->
+        <div id="sendMessageTab" class="tab-content">
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h3 class="font-bold mb-4">전체 사용자에게 쪽지 보내기</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">쪽지 제목</label>
+                        <input type="text" id="messageTitle" class="w-full bg-gray-700 rounded p-2" placeholder="쪽지 제목">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">쪽지 내용</label>
+                        <textarea id="messageContent" class="w-full bg-gray-700 rounded p-2" rows="5" placeholder="쪽지 내용"></textarea>
+                    </div>
+                    <button id="sendMessageBtn" class="w-full bg-orange-500 hover:bg-orange-600 py-3 rounded-lg font-bold">
+                        전체 발송
+                    </button>
+                </div>
+            </div>
         </div>
 
     <!-- User Info Modal -->
@@ -1589,13 +1610,83 @@ document.addEventListener('DOMContentLoaded', () => {
                     updatedAt: new Date().toISOString(),
                 })
                 .then(() => {
-                    alert("입금 계좌가 저장되었습니다. 모든 사용자에게 쪽지가 전송됩니다.");
+                    alert("입금 계좌가 저장되었습니다. 모든 사용자에게 쪽지를 전송합니다.");
+                    
+                    // Send message to all users
+                    const message = {
+                        title: "입금 계좌 변경 안내",
+                        content: `새로운 입금 계좌는 ${bank} ${num} (${holder}) 입니다.`,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        read: false
+                    };
+
+                    db.collection("users").get().then(querySnapshot => {
+                        const batch = db.batch();
+                        querySnapshot.forEach(userDoc => {
+                            const userMessagesRef = db.collection("users").doc(userDoc.id).collection("messages").doc();
+                            batch.set(userMessagesRef, message);
+                        });
+                        return batch.commit();
+                    }).then(() => {
+                        alert("모든 사용자에게 쪽지 전송을 완료했습니다.");
+                    }).catch(error => {
+                        console.error("쪽지 전송 오류: ", error);
+                        alert("사용자에게 쪽지를 전송하는 중 오류가 발생했습니다.");
+                    });
+
                 })
                 .catch((e) => {
                     console.error("Error saving account:", e);
                     alert("저장 실패: " + e.message);
                 })
                 .finally(hideLoading);
+        });
+
+        // Send custom message to all users
+        document.getElementById("sendMessageBtn").addEventListener("click", () => {
+            const title = document.getElementById("messageTitle").value.trim();
+            const content = document.getElementById("messageContent").value.trim();
+            
+            if (!title || !content) {
+                alert("제목과 내용을 모두 입력하세요.");
+                return;
+            }
+
+            if (!confirm("정말로 모든 사용자에게 이 쪽지를 보내시겠습니까?")) {
+                return;
+            }
+
+            showLoading();
+            
+            const message = {
+                title: title,
+                content: content,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false
+            };
+
+            db.collection("users").get().then(querySnapshot => {
+                if (querySnapshot.empty) {
+                    alert("메시지를 보낼 사용자가 없습니다.");
+                    hideLoading();
+                    return;
+                }
+                const batch = db.batch();
+                querySnapshot.forEach(userDoc => {
+                    const userMessagesRef = db.collection("users").doc(userDoc.id).collection("messages").doc();
+                    batch.set(userMessagesRef, message);
+                });
+                return batch.commit().then(() => querySnapshot.size); // Pass the size to the next then
+            }).then((userCount) => {
+                alert(`모든 사용자 (${userCount}명)에게 쪽지 전송을 완료했습니다.`);
+                document.getElementById("messageTitle").value = "";
+                document.getElementById("messageContent").value = "";
+            }).catch(error => {
+                console.error("쪽지 전송 오류: ", error);
+                alert("사용자에게 쪽지를 전송하는 중 오류가 발생했습니다.");
+            }).finally(() => {
+                hideLoading();
+            });
         });
 
         // Password Change Functionality
@@ -1685,6 +1776,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         case "notices":
                             // 공지사항 관리 로드
                             loadAdminItems();
+                            break;
+                        case "sendMessage":
+                            // No data to load for this tab
                             break;
                     }
                 });

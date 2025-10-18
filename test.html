@@ -1,55 +1,192 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mac Style Browser</title>
-<style>
-  body {
-    margin: 0;
-    background: #f5f5f7;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-  .window {
-    width: 900px;
-    height: 600px;
-    margin: 40px auto;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    overflow: hidden;
-  }
-  .titlebar {
-    height: 35px;
-    background: #ebebeb;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    gap: 8px;
-  }
-  .btn {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-  }
-  .close { background: #ff5f57; }
-  .minimize { background: #ffbd2e; }
-  .maximize { background: #28c840; }
-  iframe {
-    width: 100%;
-    height: calc(100% - 35px);
-    border: none;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기능 테스트 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        body { background-color: #111827; color: white; font-family: sans-serif; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 2rem; background-color: #1f2937; border-radius: 0.5rem; }
+        .btn { padding: 0.5rem 1rem; border-radius: 0.25rem; font-weight: bold; cursor: pointer; }
+        .btn-primary { background-color: #fb923c; color: white; }
+        .btn-secondary { background-color: #374151; color: white; }
+        .input { background-color: #374151; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; width: 100%; }
+        #messages-container { margin-top: 1rem; border: 1px solid #4b5563; padding: 1rem; min-height: 100px; }
+    </style>
 </head>
 <body>
-  <div class="window">
-    <div class="titlebar">
-      <div class="btn close"></div>
-      <div class="btn minimize"></div>
-      <div class="btn maximize"></div>
+    <div class="container">
+        <h1 class="text-2xl font-bold mb-4">쪽지 기능 테스트</h1>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <!-- Admin Section -->
+            <div class="border border-orange-400 p-4 rounded">
+                <h2 class="text-xl font-bold mb-2">관리자</h2>
+                <div class="space-y-2">
+                    <input type="email" id="admin-email" placeholder="관리자 이메일 (testadmin@test.com)" class="input">
+                    <input type="password" id="admin-password" placeholder="관리자 비밀번호 (password123)" class="input">
+                    <button id="admin-login-btn" class="btn btn-primary w-full">관리자로 로그인</button>
+                </div>
+                <hr class="my-4 border-gray-600">
+                <div class="space-y-2">
+                    <h3 class="font-bold">입금 계좌 변경</h3>
+                    <input type="text" id="depBank" class="input" value="테스트은행">
+                    <input type="text" id="depNumber" class="input" value="123-456-789">
+                    <input type="text" id="depHolder" class="input" value="테스트">
+                    <button id="save-account-btn" class="btn btn-secondary w-full">계좌 변경 및 쪽지 발송</button>
+                </div>
+            </div>
+
+            <!-- User Section -->
+            <div class="border border-blue-400 p-4 rounded">
+                <h2 class="text-xl font-bold mb-2">사용자</h2>
+                <div class="space-y-2">
+                    <input type="email" id="user-email" placeholder="사용자 이메일 (testuser@test.com)" class="input">
+                    <input type="password" id="user-password" placeholder="사용자 비밀번호 (password123)" class="input">
+                    <button id="user-login-btn" class="btn btn-primary w-full">사용자로 로그인</button>
+                </div>
+                 <hr class="my-4 border-gray-600">
+                <div>
+                    <h3 class="font-bold mb-2">받은 쪽지함</h3>
+                    <div id="messages-container"></div>
+                </div>
+            </div>
+        </div>
+        <div id="auth-status" class="text-center p-2 bg-gray-900 rounded">로그인되지 않음</div>
     </div>
-    <iframe src="https://www.google.com"></iframe>
-  </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
+            authDomain: "cloud-casino-34cc6.firebaseapp.com",
+            projectId: "cloud-casino-34cc6",
+            storageBucket: "cloud-casino-34cc6.firebasestorage.app",
+            messagingSenderId: "289867400095",
+            appId: "1:289867400095:web:c9060c2a534225db9cf3aa"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        let messageUnsubscribe = null;
+
+        const authStatusDiv = document.getElementById('auth-status');
+
+        // Auth state listener
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                authStatusDiv.textContent = `로그인됨: ${user.email}`;
+                if (messageUnsubscribe) messageUnsubscribe(); // Unsubscribe from previous listener
+                loadMessages(user.uid);
+            } else {
+                authStatusDiv.textContent = '로그인되지 않음';
+                if (messageUnsubscribe) messageUnsubscribe();
+                document.getElementById('messages-container').innerHTML = '';
+            }
+        });
+
+        // --- Admin Actions ---
+        document.getElementById('admin-login-btn').addEventListener('click', () => {
+            const email = document.getElementById('admin-email').value || 'testadmin@test.com';
+            const password = document.getElementById('admin-password').value || 'password123';
+            auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
+        });
+
+        document.getElementById('save-account-btn').addEventListener('click', () => {
+            if (!auth.currentUser) {
+                alert("관리자로 먼저 로그인하세요.");
+                return;
+            }
+
+            const bank = document.getElementById("depBank").value.trim();
+            const num = document.getElementById("depNumber").value.trim();
+            const holder = document.getElementById("depHolder").value.trim();
+
+            if (!bank || !num || !holder) {
+                alert("모든 계좌 정보를 입력하세요.");
+                return;
+            }
+
+            console.log("계좌 정보 저장을 시작합니다...");
+
+            db.collection("config").doc("depositAccount").set({
+                bank,
+                accountNumber: num,
+                holder,
+                updatedAt: new Date().toISOString(),
+            })
+            .then(() => {
+                alert("계좌 정보 저장 완료. 모든 사용자에게 쪽지 전송을 시작합니다.");
+                
+                const message = {
+                    title: "입금 계좌 변경 안내 (테스트)",
+                    content: `새로운 입금 계좌는 ${bank} ${num} (${holder}) 입니다.`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                };
+
+                return db.collection("users").get();
+            })
+            .then(querySnapshot => {
+                if (querySnapshot.empty) {
+                    console.log("쪽지를 보낼 사용자가 없습니다.");
+                    return;
+                }
+                const batch = db.batch();
+                querySnapshot.forEach(userDoc => {
+                    console.log(`'${userDoc.id}' 사용자에게 쪽지를 추가합니다.`);
+                    const userMessagesRef = db.collection("users").doc(userDoc.id).collection("messages").doc();
+                    batch.set(userMessagesRef, message);
+                });
+                return batch.commit();
+            })
+            .then(() => {
+                alert("모든 사용자에게 쪽지 전송을 완료했습니다.");
+                console.log("쪽지 전송 완료.");
+            })
+            .catch(error => {
+                console.error("오류 발생: ", error);
+                alert("오류가 발생했습니다: " + error.message);
+            });
+        });
+
+        // --- User Actions ---
+        document.getElementById('user-login-btn').addEventListener('click', () => {
+            const email = document.getElementById('user-email').value || 'testuser@test.com';
+            const password = document.getElementById('user-password').value || 'password123';
+            auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
+        });
+
+        function loadMessages(userId) {
+            const container = document.getElementById('messages-container');
+            messageUnsubscribe = db.collection('users').doc(userId).collection('messages')
+                .orderBy('timestamp', 'desc')
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) {
+                        container.innerHTML = '<p>받은 쪽지가 없습니다.</p>';
+                        return;
+                    }
+                    container.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const msg = doc.data();
+                        const div = document.createElement('div');
+                        div.className = 'p-2 border-b border-gray-600';
+                        div.innerHTML = `<strong>${msg.title}</strong><br><small>${new Date(msg.timestamp.seconds * 1000).toLocaleString()}</small>`;
+                        container.appendChild(div);
+                    });
+                }, error => {
+                    console.error("쪽지 로딩 오류:", error);
+                    container.innerHTML = '<p>쪽지를 불러오는 중 오류가 발생했습니다.</p>';
+                });
+        }
+
+    </script>
 </body>
 </html>
