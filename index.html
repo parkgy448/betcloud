@@ -105,7 +105,7 @@
         <!-- Game Grid -->
         <div class="grid grid-cols-3 gap-2 mb-6">
             <!-- Row 1 -->
-            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-md aspect-square flex flex-col items-center justify-center relative" onclick="guardGameAccess('sports')">
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-md aspect-square flex flex-col items-center justify-center relative" onclick="handleGameClick('https://prod20293.442hattrick.com')">
                 <i data-feather="flag" class="w-8 h-8 mb-2"></i>
                 <span class="text-xs">스포츠</span>
             </div>
@@ -131,11 +131,11 @@
                 <span class="text-xs">미니게임</span>
             </div>
             <!-- Row 3 -->
-            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardMoneyTransfer()">
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="handleGameClick('https://babylonvg.evo-games.com/frontend/evo/mini/#category=top_games&game=baccarat&table_id=always9baccarat1&vt_id=tezlk2qigufqbvs3&lobby_launch_id=6a6a46999b3548bc95d316df1bb287f9')">
                 <i data-feather="layers" class="w-8 h-8 mb-2"></i>
                 <span class="text-xs">카지노</span>
             </div>
-            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="guardGameAccess('slot')">
+            <div class="bg-orange-600/80 hover:bg-orange-500 transition rounded-lg aspect-square flex flex-col items-center justify-center" onclick="handleGameClick('https://nolimitcity.com/demo?game=GatorHunters')">
                 <i data-feather="codesandbox" class="w-8 h-8 mb-2"></i>
                 <span class="text-xs">슬롯</span>
             </div>
@@ -251,6 +251,20 @@
         <div class="bg-gray-800 rounded-lg p-6 flex items-center">
             <i data-feather="loader" class="w-8 h-8 text-orange-500 animate-spin mr-3"></i>
             <span>로딩 중...</span>
+        </div>
+    </div>
+
+    <!-- Enhanced Redirection Overlay -->
+    <div id="redirectOverlay" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-gray-900 border border-orange-500/50 rounded-xl shadow-2xl p-8 w-full max-w-sm text-center transform transition-all duration-300 scale-95 opacity-0" id="redirectCard">
+            <div class="flex justify-center items-center mb-4">
+                <i id="redirectIcon" data-feather="loader" class="w-10 h-10 text-orange-500 animate-spin"></i>
+            </div>
+            <h3 id="redirectMessage" class="text-xl font-bold text-white mb-2">로딩중...</h3>
+            <p class="text-gray-400 text-sm mb-6">잠시만 기다려주세요...</p>
+            <div class="w-full bg-gray-700 rounded-full h-2.5">
+                <div id="progressBar" class="bg-orange-500 h-2.5 rounded-full transition-all duration-1000 ease-linear" style="width: 0%"></div>
+            </div>
         </div>
     </div>
 
@@ -377,6 +391,64 @@
             setTimeout(() => {
                 overlay.remove();
             }, 220);
+        }
+
+        function handleGameClick(url) {
+            const user = auth.currentUser;
+            if (!user) {
+                openModal("loginModal");
+                return;
+            }
+
+            db.collection("users").doc(user.uid).get().then((doc) => {
+                if (!doc.exists || doc.data().status !== "active") {
+                    alert("승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
+                    return;
+                }
+
+                const overlay = document.getElementById('redirectOverlay');
+                const card = document.getElementById('redirectCard');
+                const message = document.getElementById('redirectMessage');
+                const progressBar = document.getElementById('progressBar');
+
+                if (!overlay || !card || !message || !progressBar) return;
+
+                // Reset and show overlay
+                message.textContent = '로딩중...';
+                progressBar.style.width = '0%';
+                overlay.classList.remove('hidden');
+                
+                // Animate in
+                requestAnimationFrame(() => {
+                    card.classList.remove('scale-95', 'opacity-0');
+                });
+
+                // Step 1: Loading
+                setTimeout(() => {
+                    progressBar.style.width = '50%';
+                    
+                    // Step 2: Redirecting
+                    setTimeout(() => {
+                        message.textContent = '이동중...';
+                        progressBar.style.width = '100%';
+
+                        // Step 3: Open URL and hide
+                        setTimeout(() => {
+                            window.open(url, '_blank');
+                            
+                            // Animate out
+                            card.classList.add('scale-95', 'opacity-0');
+                            setTimeout(() => {
+                                overlay.classList.add('hidden');
+                            }, 300); // Match animation duration
+
+                        }, 500); // A brief moment to see the "Redirecting" state
+                    }, 1000); // Loading duration
+                }, 100); // Short delay to allow animation-in to start
+            }).catch(error => {
+                console.error("Error getting user data:", error);
+                alert("오류가 발생했습니다. 다시 시도해주세요.");
+            });
         }
 
         function guardGameAccess(gameType) {
@@ -806,84 +878,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-<script>
-// Enforce login for Casino card; only navigate when logged-in & approved.
-document.addEventListener("DOMContentLoaded", () => {
-  const TARGET_URL = "https://babylonvg.evo-games.com/frontend/evo/mini/#category=top_games&game=baccarat&table_id=always9baccarat1&vt_id=tezlk2qigufqbvs3&lobby_launch_id=6a6a46999b3548bc95d316df1bb287f9";
 
-  // Find the "카지노" card by its label, then get the clickable container
-  const casinoSpan = Array.from(document.querySelectorAll('span'))
-    .find(el => (el.textContent || "").trim() === "카지노");
-  if (!casinoSpan) return;
-
-  let casinoCard = casinoSpan.closest('div');
-  if (!casinoCard) return;
-
-  // 1) Remove inline onclick and previously bound listeners by cloning
-  try { casinoCard.removeAttribute('onclick'); } catch(e){}
-  const clone = casinoCard.cloneNode(true);
-  casinoCard.parentNode.replaceChild(clone, casinoCard);
-  casinoCard = clone;
-
-  // 2) New guarded click handler
-  casinoCard.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    // If Firebase auth is available, enforce login+approval
-    try {
-      if (typeof auth !== "undefined") {
-        const user = auth.currentUser;
-        if (!user) {
-          if (typeof openModal === "function") openModal("loginModal");
-          else window.location.href = "login.html";
-          return;
-        }
-        // Check approval in Firestore if available
-        if (typeof db !== "undefined" && db) {
-          try {
-            const doc = await db.collection("users").doc(user.uid).get();
-            if (!doc.exists) {
-              // Unknown user — force re-login
-              await auth.signOut?.();
-              if (typeof openModal === "function") openModal("loginModal");
-              else window.location.href = "login.html";
-              return;
-            }
-            const data = doc.data();
-            if (!data || data.status !== "active") {
-              alert("승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
-              return;
-            }
-          } catch (err) {
-            console.error("Casino Firestore check failed:", err);
-            alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-            return;
-          }
-        }
-      } else {
-        // No Firebase available: require a local login flag if one exists
-        const logged = (window.isLoggedIn === true || localStorage.getItem("userLoggedIn") === "true");
-        if (!logged) {
-          if (typeof openModal === "function") openModal("loginModal");
-          else window.location.href = "login.html";
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn("Casino login guard error:", err);
-      if (typeof openModal === "function") openModal("loginModal");
-      else window.location.href = "login.html";
-      return;
-    }
-
-    // 3) Logged-in & approved → show loading for ~3s and navigate
-    try { typeof showLoading === "function" && showLoading(); } catch(_){}
-    setTimeout(() => {
-      window.location.href = TARGET_URL;
-    }, 3000);
-  });
-});
-</script>
 </body>
 </html>
