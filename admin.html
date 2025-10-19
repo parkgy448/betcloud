@@ -95,24 +95,15 @@
 <body class="min-h-screen">
     <div class="container mx-auto px-4 py-6">
         <!-- Header -->
-        <header class="flex justify-between items-center mb-8">
-            <div class="flex items-center">
-                <i data-feather="cloud" class="text-orange-500 mr-2"></i>
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent">
-                    BETCLOUD 관리자
-                </h1>
-                <span class="ml-2 text-xs text-gray-400">ADMIN PANEL</span>
-            </div>
-            <div class="flex items-center space-x-4">
-                <span id="adminName" class="text-sm">관리자</span>
-                <a href="index.html" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-md text-sm">
-                    메인으로
-                </a>
-                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm">
-                    로그아웃
-                </button>
-            </div>
-        </header>
+<header class="flex justify-between items-center fixed top-0 left-0 w-full z-50 bg-black/60 backdrop-blur-md py-3 px-4">
+  <div></div>
+  <a href="index.html" class="mx-auto">
+    <img src="https://i.ibb.co/xdhYSGr/logo.png" alt="LEAVES Logo" class="h-12 md:h-16 object-contain">
+  </a>
+  <a href="index.html" class="text-gray-400 hover:text-white">
+    <i data-feather="x"></i>
+  </a>
+</header>
 
         <!-- Statistics -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
