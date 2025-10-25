@@ -8,10 +8,12 @@
     <script src="https://unpkg.com/feather-icons"></script>
     
     <!-- Firebase and dependencies -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+
     <script src="auth.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&display=swap');
@@ -96,7 +98,7 @@
     <div class="container mx-auto px-4 py-6">
         <!-- Header -->
 <header class="flex justify-between items-center fixed top-0 left-0 w-full z-50 bg-black/60 backdrop-blur-md py-3 px-4">
-  <div></div>
+  <div id="adminName" class="text-white"></div>
   <a href="index.html" class="mx-auto">
     <img src="https://i.ibb.co/xdhYSGr/logo.png" alt="LEAVES Logo" class="h-12 md:h-16 object-contain">
   </a>
@@ -618,12 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
-            
-            // Cloud Functions region binding
-            const functions = firebase.app().functions("asia-northeast3");
-            window.regionCallable = function (name) {
-                return functions.httpsCallable(name);
-            };
         }
 
         const db = firebase.firestore();
@@ -1862,6 +1858,62 @@ function loadSentMessages() {
         document.querySelector("[data-close-pwmodal]").addEventListener("click", () => {
             closeModal("pwChangeModal");
         });
+
+        // === Replace existing pwApplyBtn handler with this block ===
+document.getElementById("pwApplyBtn").addEventListener("click", async () => {
+    const newPassword1 = document.getElementById("pwNew1").value;
+    const newPassword2 = document.getElementById("pwNew2").value;
+    const forceNext = !!document.getElementById("pwForceChangeNext").checked;
+
+    if (newPassword1.length < 6) {
+        alert("비밀번호는 6자리 이상이어야 합니다.");
+        return;
+    }
+
+    if (newPassword1 !== newPassword2) {
+        alert("새 비밀번호가 일치하지 않습니다.");
+        return;
+    }
+
+    if (!window.PW_CHANGE_TARGET || (!window.PW_CHANGE_TARGET.uid && !window.PW_CHANGE_TARGET.userDocId)) {
+        alert("오류: 비밀번호를 변경할 대상을 찾을 수 없습니다.");
+        return;
+    }
+
+    const uid = window.PW_CHANGE_TARGET.userDocId || window.PW_CHANGE_TARGET.uid;
+    const displayId = window.PW_CHANGE_TARGET.loginId || uid;
+
+    if (!confirm(`정말로 ${displayId} 회원의 비밀번호를 재설정하시겠습니까?`)) {
+        return;
+    }
+
+    showLoading();
+
+    // 1) 우선 Cloud Function 호출 시도
+    try {
+        const functions = (firebase.app && firebase.app().functions) ? firebase.app().functions('asia-northeast3') : firebase.functions();
+        const adminAction = functions.httpsCallable('adminAction');
+        const result = await adminAction({
+            action: 'resetPassword',
+            payload: { uid: uid, newPassword: newPassword1 }
+        });
+
+        if (result && result.data && result.data.success) {
+            alert("비밀번호가 성공적으로 변경되었습니다.");
+            closeModal("pwChangeModal");
+            document.getElementById("pwNew1").value = "";
+            document.getElementById("pwNew2").value = "";
+        } else {
+            throw new Error(result && result.data && result.data.message ? result.data.message : "함수 처리 실패");
+        }
+    } catch (fnErr) {
+        console.error("Functions 호출 실패:", fnErr);
+        alert("비밀번호 변경에 실패했습니다: " + formatFunctionsError(fnErr));
+    } finally {
+        hideLoading();
+    }
+});
+
     </script>
 
 
