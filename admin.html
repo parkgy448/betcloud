@@ -516,6 +516,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div id="infoUserId" class="font-bold"></div>
                     </div>
                     <div>
+                        <label class="text-gray-400">로그인 비밀번호</label>
+                        <div id="infoLoginPw" class="font-bold text-red-400"></div>
+                    </div>
+                    <div>
                         <label class="text-gray-400">가입일</label>
                         <div id="infoJoinDate"></div>
                     </div>
@@ -645,6 +649,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function esc(str = "") {
             return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function formatBankName(value = "") {
+            const map = {
+                kb: "국민은행",
+                shinhan: "신한은행",
+                woori: "우리은행",
+                hana: "하나은행"
+            };
+            const key = String(value).trim().toLowerCase();
+            return map[key] || value;
         }
 
         // Format Functions Error
@@ -939,10 +954,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById("infoAvatar").src = u.photoURL || DEFAULT_AVATAR_URL;
                 document.getElementById("infoName").innerText = esc(u.name);
                 document.getElementById("infoUserId").innerText = esc(u.userId);
+                document.getElementById("infoLoginPw").innerText = u.password ? u.password : "확인 불가 (저장 안됨)";
                 document.getElementById("infoJoinDate").innerText = new Date(u.joinDate).toLocaleString();
                 document.getElementById("infoBalance").innerText = (u.balance || 0).toLocaleString() + " 원";
                 document.getElementById("infoPoint").innerText = (u.point || 0).toLocaleString() + " P";
-                document.getElementById("infoBank").innerText = esc(u.bank);
+                document.getElementById("infoBank").innerText = esc(formatBankName(u.bank));
                 document.getElementById("infoAccount").innerText = esc(u.account);
                 document.getElementById("infoAccountName").innerText = esc(u.accountName);
 
@@ -1277,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     row.innerHTML = `
                         <td class="p-3">${request.username}</td>
                         <td class="p-3">${request.amount.toLocaleString()}원</td>
-                        <td class="p-3">${request.bank}</td>
+                        <td class="p-3">${esc(formatBankName(request.bank))}</td>
                         <td class="p-3">${request.account}</td>
                         <td class="p-3">${request.accountName}</td>
                         <td class="p-3">

@@ -167,6 +167,17 @@
         }
         // --- END new formatter ---
 
+        function formatBankName(value = "") {
+            const map = {
+                kb: "국민은행",
+                shinhan: "신한은행",
+                woori: "우리은행",
+                hana: "하나은행"
+            };
+            const key = String(value).trim().toLowerCase();
+            return map[key] || value;
+        }
+
         function updateUserInfo(user){
             const userInfoSection = document.getElementById("userInfoSection");
             if (user){
@@ -174,7 +185,7 @@
                     if (doc.exists){
                         const userData = doc.data();
                         userInfoSection.innerHTML = `<div class="flex justify-between items-center"><div><h3 class="font-bold">${userData.name||userData.userId} 님</h3><div class="flex items-center space-x-2 mt-2"><span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">${(userData.point||0).toLocaleString()}P</span><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${(userData.balance||0).toLocaleString()}원</span></div></div><button onclick="refreshBalance()" class="text-gray-400 hover:text-white"><i data-feather="refresh-cw"></i></button></div>`;
-                        document.getElementById("userBank").textContent = userData.bank || "-";
+                        document.getElementById("userBank").textContent = formatBankName(userData.bank || "-");
                         document.getElementById("userAccount").textContent = userData.account ? userData.account.replace(/(\d{3})(\d{4})(\d{4})/,"$1-****-$3") : "-";
                         document.getElementById("userAccountName").textContent = userData.accountName || "-";
                         document.getElementById("currentBalance").textContent = (userData.balance||0).toLocaleString() + "원";
@@ -258,7 +269,7 @@
                         userId: user.uid,
                         userName: userData.name || userData.userId,
                         amount: currentExchangeAmount,
-                        bank: userData.bank || "",
+                        bank: formatBankName(userData.bank || ""),
                         account: userData.account || "",
                         accountName: userData.accountName || "",
                         date: firebase.firestore.FieldValue.serverTimestamp(),
@@ -322,7 +333,7 @@
 
                         const historyItem = document.createElement("div");
                         historyItem.className = "flex justify-between items-center bg-gray-700 p-3 rounded";
-                        historyItem.innerHTML = `<div><div class="text-sm">${date}</div><div class="text-xs text-gray-400">${item.bank || ""} ${item.account || ""}</div></div>
+                        historyItem.innerHTML = `<div><div class="text-sm">${date}</div><div class="text-xs text-gray-400">${formatBankName(item.bank || "")} ${item.account || ""}</div></div>
                                                  <div class="text-right"><div class="font-bold">${(item.amount||0).toLocaleString()}원</div><div class="text-xs ${statusClass}">${statusText}</div></div>`;
                         historyList.appendChild(historyItem);
                     });

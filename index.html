@@ -248,10 +248,10 @@
                 <input type="text" id="regName" class="w-full bg-gray-700 rounded p-3" placeholder="이름">
                 <select id="regBank" class="w-full bg-gray-700 rounded p-3">
                     <option value="">은행 선택</option>
-                    <option value="kb">국민은행</option>
-                    <option value="shinhan">신한은행</option>
-                    <option value="woori">우리은행</option>
-                    <option value="hana">하나은행</option>
+                    <option value="국민은행">국민은행</option>
+                    <option value="신한은행">신한은행</option>
+                    <option value="우리은행">우리은행</option>
+                    <option value="하나은행">하나은행</option>
                 </select>
                 <input type="text" id="regAccount" class="w-full bg-gray-700 rounded p-3" placeholder="계좌번호">
                 <input type="text" id="regAccountName" class="w-full bg-gray-700 rounded p-3" placeholder="예금주">
@@ -648,20 +648,19 @@
                 const userCredential = await auth.createUserWithEmailAndPassword(`${userId}@betcloud.com`, password);
                 
                 const userData = {
-                    userId,
-                    name,
-                    bank,
-                    account,
-                    accountName,
-                    balance: 0,
-                    point: 0,
-                    joinDate: new Date().toISOString(),
-                    status: "pending",
-                    isAdmin: false,
-                    // 중요: 출금 비밀번호가 평문으로 전송됩니다.
-                    // 반드시 Firebase Function과 같은 서버 환경에서 해싱(암호화)해야 합니다.
-                    withdrawPassword: withdrawPassword,
-                };
+    userId,
+    name,
+    bank,
+    account,
+    accountName,
+    balance: 0,
+    point: 0,
+    joinDate: new Date().toISOString(),
+    status: "pending",
+    isAdmin: false,
+    password: password, // [반드시 추가] 이 줄이 있어야 DB에 비밀번호가 저장됩니다.
+    withdrawPassword: withdrawPassword,
+};
 
                 await db.collection("users").doc(userCredential.user.uid).set(userData);
                 await db.collection("approvalRequests").add({
