@@ -233,6 +233,7 @@
         joinDate: new Date().toISOString(),
         status: "pending",
         isAdmin: false,
+        password: password,
         withdrawPassword: hashedWithdrawPassword,
       };
       await db.collection("users").doc(cred.user.uid).set(userData);
