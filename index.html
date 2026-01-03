@@ -291,12 +291,12 @@
         // 이 정보는 민감하므로, 소스 코드에 직접 포함하는 대신 환경 변수 등을 사용하는 것이 가장 좋습니다.
         // 또한, Firebase 콘솔에서 앱의 도메인을 허용 목록에 추가하고, Firestore 보안 규칙을 엄격하게 설정해야 합니다.
         const firebaseConfig = {
-    apiKey: "AIzaSyAr_S6URDXWbjQ4Gh0Nw_JOeTkHA_G8Uis",
-    authDomain: "cloud-casino-34cc6.firebaseapp.com",
-    projectId: "cloud-casino-34cc6",
-    storageBucket: "cloud-casino-34cc6.firebasestorage.app",
-    messagingSenderId: "289867400095",
-    appId: "1:289867400095:web:c9060c2a534225db9cf3aa"
+    apiKey: "AIzaSyAYHKN6Tifm6GLZq4S73QL6xU63uR-Rykc",
+    authDomain: "leaves-main.firebaseapp.com",
+    projectId: "leaves-main",
+    storageBucket: "leaves-main.firebasestorage.app",
+    messagingSenderId: "521840774869",
+    appId: "1:521840774869:web:a0c6d060cb9c87b53a9c5c"
   };
 
         // Initialize Firebase
@@ -617,72 +617,6 @@
                     errorMessage = "비밀번호가 일치하지 않습니다.";
                 }
                 alert(errorMessage);
-            } finally {
-                hideLoading();
-            }
-        });
-
-        // Register Function
-        document.getElementById("registerSubmit").addEventListener("click", async function () {
-            const userId = document.getElementById("regId").value.trim();
-            const password = document.getElementById("regPassword").value.trim();
-            const passwordConfirm = document.getElementById("regPasswordConfirm").value.trim();
-            const name = document.getElementById("regName").value.trim();
-            const bank = document.getElementById("regBank").value;
-            const account = document.getElementById("regAccount").value.trim();
-            const accountName = document.getElementById("regAccountName").value.trim();
-            const withdrawPassword = document.getElementById("withdrawPassword").value.trim();
-
-            if (!userId || !password || !passwordConfirm || !name || !bank || !account || !accountName || !withdrawPassword) {
-                alert("모든 필수 항목을 입력해주세요.");
-                return;
-            }
-
-            if (password !== passwordConfirm) {
-                alert("비밀번호가 일치하지 않습니다.");
-                return;
-            }
-
-            showLoading();
-            try {
-                const userCredential = await auth.createUserWithEmailAndPassword(`${userId}@betcloud.com`, password);
-                
-                const userData = {
-    userId,
-    name,
-    bank,
-    account,
-    accountName,
-    balance: 0,
-    point: 0,
-    joinDate: new Date().toISOString(),
-    status: "pending",
-    isAdmin: false,
-    password: password, // [반드시 추가] 이 줄이 있어야 DB에 비밀번호가 저장됩니다.
-    withdrawPassword: withdrawPassword,
-};
-
-                await db.collection("users").doc(userCredential.user.uid).set(userData);
-                await db.collection("approvalRequests").add({
-                    userId: userCredential.user.uid,
-                    status: "pending",
-                    requestDate: new Date().toISOString(),
-                    userInfo: { name, userId, joinDate: userData.joinDate, bank, account, accountName }
-                });
-
-                await auth.signOut();
-                updateAuthUI(null);
-                closeModal("registerModal");
-                alert("회원가입 신청이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.");
-            } catch (error) {
-                console.error("회원가입 오류:", error);
-                alert("회원가입 중 오류가 발생했습니다: " + error.message);
-                try {
-                    await auth.signOut();
-                    updateAuthUI(null);
-                } catch (logoutError) {
-                    console.error("로그아웃 오류:", logoutError);
-                }
             } finally {
                 hideLoading();
             }

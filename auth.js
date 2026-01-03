@@ -189,6 +189,8 @@
 
   // ==== Register ====
   async function doRegister() {
+    if (window.__bcRegisterInFlight) return;
+    window.__bcRegisterInFlight = true;
     const userId = $("regId")?.value?.trim();
     const password = $("regPassword")?.value?.trim();
     const passwordConfirm = $("regPasswordConfirm")?.value?.trim();
@@ -199,9 +201,13 @@
     const withdrawPassword = $("withdrawPassword")?.value?.trim();
 
     if (!userId || !password || !passwordConfirm || !name || !bank || !account || !accountName || !withdrawPassword) {
+      window.__bcRegisterInFlight = false;
       return alert("모든 필수 항목을 입력해주세요.");
     }
-    if (password !== passwordConfirm) return alert("비밀번호가 일치하지 않습니다.");
+    if (password !== passwordConfirm) {
+      window.__bcRegisterInFlight = false;
+      return alert("비밀번호가 일치하지 않습니다.");
+    }
 
     // Hash withdraw password if possible
     let hashedWithdrawPassword = withdrawPassword;
@@ -246,6 +252,7 @@
       alert("회원가입 중 오류가 발생했습니다: " + (err.message || err));
       try { await auth.signOut(); } catch {}
     } finally {
+      window.__bcRegisterInFlight = false;
       hideLoading();
     }
   }
@@ -332,4 +339,3 @@
   };
 
 })();
-

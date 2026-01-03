@@ -901,12 +901,31 @@ document.addEventListener('DOMContentLoaded', () => {
         async function deleteUser(userId) {
             showLoading();
             try {
+                const functions = (firebase.app && firebase.app().functions) ? firebase.app().functions('asia-northeast3') : firebase.functions();
+                const adminAction = functions.httpsCallable('adminAction');
+                let result;
+
+                try {
+                    result = await adminAction({
+                        action: "deleteUser",
+                        payload: { uid: userId }
+                    });
+                } catch (fnErr) {
+                    console.error("Functions call failed:", fnErr);
+                    throw new Error(formatFunctionsError(fnErr));
+                }
+
+                const data = result && result.data ? result.data : result;
+                if (!data || data.success !== true) {
+                    throw new Error(data && data.message ? data.message : "AUTH_DELETE_FAILED");
+                }
+
                 await db.collection("users").doc(userId).delete();
                 alert("사용자가 삭제되었습니다.");
                 loadUserData();
             } catch (error) {
                 console.error("사용자 삭제 중 오류:", error);
-                alert("사용자 삭제에 실패했습니다.");
+                alert("Delete failed: " + (error.message || error))
             } finally {
                 hideLoading();
             }
@@ -1091,13 +1110,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             showLoading();
             try {
-                await db.runTransaction(async (transaction) => {
-                    const requestRef = db.collection("approvalRequests").doc(requestId);
-                    transaction.delete(requestRef);
+                const functions = (firebase.app && firebase.app().functions) ? firebase.app().functions('asia-northeast3') : firebase.functions();
+                const adminAction = functions.httpsCallable('adminAction');
+                let result;
 
-                    const userRef = db.collection("users").doc(userId);
-                    transaction.delete(userRef);
-                });
+                try {
+                    result = await adminAction({
+                        action: "deleteUser",
+                        payload: { uid: userId }
+                    });
+                } catch (fnErr) {
+                    console.error("Functions call failed:", fnErr);
+                    throw new Error(formatFunctionsError(fnErr));
+                }
+
+                const data = result && result.data ? result.data : result;
+                if (!data || data.success !== true) {
+                    throw new Error(data && data.message ? data.message : "AUTH_DELETE_FAILED");
+                }
+
+                await db.collection("approvalRequests").doc(requestId).delete();
 
                 alert("사용자 가입이 완전히 거절되었습니다. 모든 데이터가 삭제되었습니다.");
             } catch (error) {
