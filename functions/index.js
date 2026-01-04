@@ -42,7 +42,7 @@ function requireString(value, fieldName) {
   return trimmed;
 }
 
-exports.adminAction = onCall({ cors: ["http://127.0.0.1:5501", "http://localhost:5501", "http://localhost:5500", "https://cloud-casino-34cc6.web.app", "https://cloud-casino-34cc6.firebaseapp.com", "https://cloud-0707.com"] }, async (request) => {
+exports.adminAction = onCall({ cors: true }, async (request) => {
   await requireAdmin(request);
 
   const data = request.data || {};
