@@ -84,6 +84,21 @@
   const hideLoading = () => { const el = $("loadingSpinner"); if (el) el.classList.add("hidden"); };
   const esc = (s="") => String(s).replace(/[&<>\"']/g, (c)=>({ "&":"&amp;","<":"&lt;", ">":"&gt;", "\"":"&quot;","'":"&#39;" }[c]));
 
+  const setFormError = (id, message) => {
+    const el = $(id);
+    if (!el) {
+      if (message) alert(message);
+      return;
+    }
+    if (!message) {
+      el.textContent = "";
+      el.classList.add("hidden");
+      return;
+    }
+    el.textContent = message;
+    el.classList.remove("hidden");
+  };
+
   // bcrypt (optional for withdraw password)
   const hasBcrypt = () => { const b = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt); return !!(b && b.hashSync && b.compareSync); };
 
@@ -104,14 +119,14 @@
         box.innerHTML = `
           <div class="flex flex-col md:flex-row md:items-center md:justify-between">
             <div class="mt-3 md:mt-0 flex space-x-2">
-              <h3 class="font-bold text-lg">BETCLOUD에 오신 것을 환영합니다</h3>
+              <h3 class="font-bold text-lg">낙엽카지노에 오신 것을 환영합니다</h3>
               <p class="text-sm text-gray-300 mt-1">로그인 후 모든 서비스를 이용하세요</p>
             </div>
             <div class="w-full md:w-auto mt-4 md:mt-0">
               <div class="grid grid-cols-3 gap-2 w-full">
-                <button id="__bc_login_btn" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-orange-500 to-amber-500">Login</button>
-                <button id="__bc_register_btn" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-amber-400 to-yellow-500">Sign Up</button>
-                <button id="__bc_anon_btn" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-emerald-400 to-green-500">Anonymous</button>
+                <button id="__bc_login_btn" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-orange-500 to-amber-500">로그인</button>
+                <button id="__bc_register_btn" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-amber-400 to-yellow-500">회원가입</button>
+                <button id="__bc_anon_btn" class="w-full h-12 md:h-16 rounded-lg text-lg md:text-2xl font-extrabold text-white shadow-lg bg-gradient-to-r from-emerald-400 to-green-500">무기명가입</button>
               </div>
             </div>
           </div>
@@ -159,19 +174,26 @@
   async function doLogin() {
     const userId = $("loginId")?.value?.trim();
     const password = $("loginPassword")?.value?.trim();
-    if (!userId || !password) return alert("아이디와 비밀번호를 입력해주세요.");
+    setFormError("loginError", "");
+    if (!userId || !password) {
+      setFormError("loginError", "아이디와 비밀번호를 입력해주세요.");
+      return;
+    }
     showLoading();
     try {
       const cred = await auth.signInWithEmailAndPassword(`${userId}@betcloud.com`, password);
       const data = await pullUserData(cred.user.uid);
       if (!data) {
         await auth.signOut();
-        return alert("등록되지 않은 사용자입니다.");
+        setFormError("loginError", "등록되지 않은 사용자입니다.");
+        return;
       }
       if (data.status !== "active") {
         await auth.signOut();
-        return alert("승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
+        setFormError("loginError", "승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
+        return;
       }
+      setFormError("loginError", "");
       renderBasicUserInfo();
       closeModal("loginModal");
       // (welcome alert suppressed to avoid duplicates)
@@ -181,7 +203,7 @@
       if (err.code === "auth/user-not-found") msg = "등록되지 않은 아이디입니다.";
       else if (err.code === "auth/wrong-password") msg = "비밀번호가 일치하지 않습니다.";
       else if (err.code === "auth/internal-error" && typeof err.message === "string" && err.message.includes("INVALID_LOGIN_CREDENTIALS")) msg = "비밀번호가 일치하지 않습니다.";
-      alert(msg);
+      setFormError("loginError", msg);
     } finally {
       hideLoading();
     }
@@ -191,6 +213,7 @@
   async function doRegister() {
     if (window.__bcRegisterInFlight) return;
     window.__bcRegisterInFlight = true;
+    setFormError("registerError", "");
     const userId = $("regId")?.value?.trim();
     const password = $("regPassword")?.value?.trim();
     const passwordConfirm = $("regPasswordConfirm")?.value?.trim();
@@ -202,11 +225,13 @@
 
     if (!userId || !password || !passwordConfirm || !name || !bank || !account || !accountName || !withdrawPassword) {
       window.__bcRegisterInFlight = false;
-      return alert("모든 필수 항목을 입력해주세요.");
+      setFormError("registerError", "모든 필수 항목을 입력해주세요.");
+      return;
     }
     if (password !== passwordConfirm) {
       window.__bcRegisterInFlight = false;
-      return alert("비밀번호가 일치하지 않습니다.");
+      setFormError("registerError", "비밀번호가 일치하지 않습니다.");
+      return;
     }
 
     // Hash withdraw password if possible
@@ -246,11 +271,12 @@
       await auth.signOut();
       state.user = null; state.userData = null;
       renderBasicUserInfo();
+      setFormError("registerError", "");
       closeModal("registerModal");
       alert("회원가입 신청이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.");
     } catch (err) {
       console.error("[BCAuth] 회원가입 오류:", err);
-      alert("회원가입 중 오류가 발생했습니다: " + (err.message || err));
+      setFormError("registerError", "회원가입 중 오류가 발생했습니다: " + (err.message || err));
       try { await auth.signOut(); } catch {}
     } finally {
       window.__bcRegisterInFlight = false;

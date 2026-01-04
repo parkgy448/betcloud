@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,13 @@
             </div>
             <div class="space-y-4">
                 <input type="text" id="loginId" class="w-full bg-gray-700 rounded p-3" placeholder="아이디">
-                <input type="password" id="loginPassword" class="w-full bg-gray-700 rounded p-3" placeholder="비밀번호">
+                <div class="relative">
+                    <input type="password" id="loginPassword" class="w-full bg-gray-700 rounded p-3 pr-10" placeholder="비밀번호">
+                    <button type="button" onclick="togglePassword('loginPassword','loginEyeIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white" aria-label="Toggle password visibility">
+                        <i data-feather="eye" id="loginEyeIcon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p id="loginError" class="text-sm text-red-400 hidden" aria-live="polite"></p>
                 <button id="loginSubmit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-bold">
                     로그인
                 </button>
@@ -243,19 +249,29 @@
             </div>
             <div class="space-y-4">
                 <input type="text" id="regId" class="w-full bg-gray-700 rounded p-3" placeholder="아이디">
-                <input type="password" id="regPassword" class="w-full bg-gray-700 rounded p-3" placeholder="비밀번호">
-                <input type="password" id="regPasswordConfirm" class="w-full bg-gray-700 rounded p-3" placeholder="비밀번호 확인">
+                <div class="relative">
+                    <input type="password" id="regPassword" class="w-full bg-gray-700 rounded p-3 pr-10" placeholder="비밀번호">
+                    <button type="button" onclick="togglePassword('regPassword','regPasswordEyeIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white" aria-label="Toggle password visibility">
+                        <i data-feather="eye" id="regPasswordEyeIcon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="relative">
+                    <input type="password" id="regPasswordConfirm" class="w-full bg-gray-700 rounded p-3 pr-10" placeholder="비밀번호 확인">
+                    <button type="button" onclick="togglePassword('regPasswordConfirm','regPasswordConfirmEyeIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white" aria-label="Toggle password visibility">
+                        <i data-feather="eye" id="regPasswordConfirmEyeIcon" class="w-4 h-4"></i>
+                    </button>
+                </div>
                 <input type="text" id="regName" class="w-full bg-gray-700 rounded p-3" placeholder="이름">
-                <select id="regBank" class="w-full bg-gray-700 rounded p-3">
-                    <option value="">은행 선택</option>
-                    <option value="국민은행">국민은행</option>
-                    <option value="신한은행">신한은행</option>
-                    <option value="우리은행">우리은행</option>
-                    <option value="하나은행">하나은행</option>
-                </select>
+                <input type="text" id="regBank" class="w-full bg-gray-700 rounded p-3" placeholder="은행명">
                 <input type="text" id="regAccount" class="w-full bg-gray-700 rounded p-3" placeholder="계좌번호">
                 <input type="text" id="regAccountName" class="w-full bg-gray-700 rounded p-3" placeholder="예금주">
-                <input type="password" id="withdrawPassword" class="w-full bg-gray-700 rounded p-3" placeholder="출금 비밀번호">
+                <div class="relative">
+                    <input type="password" id="withdrawPassword" class="w-full bg-gray-700 rounded p-3 pr-10" placeholder="출금 비밀번호">
+                    <button type="button" onclick="togglePassword('withdrawPassword','withdrawPasswordEyeIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white" aria-label="Toggle password visibility">
+                        <i data-feather="eye" id="withdrawPasswordEyeIcon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p id="registerError" class="text-sm text-red-400 hidden" aria-live="polite"></p>
                 <button id="registerSubmit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-bold">
                     회원가입
                 </button>
@@ -331,15 +347,45 @@
             document.getElementById("loadingSpinner").classList.add("hidden");
         }
 
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.remove("hidden");
+                function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.remove("hidden");
+            if (modalId === "loginModal") clearInlineError("loginError");
+            if (modalId === "registerModal") clearInlineError("registerError");
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).classList.add("hidden");
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add("hidden");
         }
 
-        function showUnderMaintenance(message) {
+        function setInlineError(id, message) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (!message) {
+                el.textContent = "";
+                el.classList.add("hidden");
+                return;
+            }
+            el.textContent = message;
+            el.classList.remove("hidden");
+        }
+
+        function clearInlineError(id) {
+            setInlineError(id, "");
+        }
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (!input) return;
+            const isHidden = input.type === "password";
+            input.type = isHidden ? "text" : "password";
+            if (icon) icon.setAttribute("data-feather", isHidden ? "eye-off" : "eye");
+            if (window.feather) feather.replace();
+        }
+
+function showUnderMaintenance(message) {
             const msg = message || "현재 점검 중입니다. 빠른 시일 내에 서비스가 재개될 예정입니다.";
             // If not logged in, fallback to simple alert (login flow might call this)
             try {
@@ -581,8 +627,9 @@
             const userId = document.getElementById("loginId").value.trim();
             const password = document.getElementById("loginPassword").value.trim();
 
+            clearInlineError("loginError");
             if (!userId || !password) {
-                alert("아이디와 비밀번호를 입력해주세요.");
+                setInlineError("loginError", "아이디와 비밀번호를 입력해주세요.");
                 return;
             }
 
@@ -593,17 +640,18 @@
                 
                 if (!userDoc.exists) {
                     await auth.signOut();
-                    alert("등록되지 않은 사용자입니다.");
+                    setInlineError("loginError", "등록되지 않은 사용자입니다.");
                     return;
                 }
 
                 const userData = userDoc.data();
                 if (userData.status !== "active") {
                     await auth.signOut();
-                    alert("승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
+                    setInlineError("loginError", "승인 대기 중인 계정입니다. 관리자 승인 후 이용 가능합니다.");
                     return;
                 }
 
+                clearInlineError("loginError");
                 updateAuthUI(userData);
                 closeModal("loginModal");
                 // 환영 알림은 auth.js 또는 상위 로직에서 처리하므로 중복 방지
@@ -616,7 +664,7 @@
                 } else if (error.code === "auth/wrong-password") {
                     errorMessage = "비밀번호가 일치하지 않습니다.";
                 }
-                alert(errorMessage);
+                setInlineError("loginError", errorMessage);
             } finally {
                 hideLoading();
             }
