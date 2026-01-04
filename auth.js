@@ -233,6 +233,11 @@
       setFormError("registerError", "비밀번호가 일치하지 않습니다.");
       return;
     }
+    if (/^\d+$/.test(password)) {
+      window.__bcRegisterInFlight = false;
+      setFormError("registerError", "비밀번호는 숫자만으로 사용할 수 없습니다.");
+      return;
+    }
     if (joinCode !== "1111") {
       window.__bcRegisterInFlight = false;
       setFormError("registerError", "가입코드를 제대로 입력해주세요.");
