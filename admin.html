@@ -551,6 +551,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <label class="text-gray-400">예금주</label>
                         <div id="infoAccountName"></div>
                     </div>
+                    <div class="col-span-2">
+                        <label class="text-gray-400">휴대전화</label>
+                        <div id="infoPhone"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -973,6 +977,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById("infoAvatar").src = u.photoURL || DEFAULT_AVATAR_URL;
                 document.getElementById("infoName").innerText = esc(u.name);
                 document.getElementById("infoUserId").innerText = esc(u.userId);
+                document.getElementById("infoPhone").innerText = u.phone ? esc(u.phone) : "-";
                 document.getElementById("infoLoginPw").innerText = u.password ? u.password : "확인 불가 (저장 안됨)";
                 document.getElementById("infoJoinDate").innerText = new Date(u.joinDate).toLocaleString();
                 document.getElementById("infoBalance").innerText = (u.balance || 0).toLocaleString() + " 원";

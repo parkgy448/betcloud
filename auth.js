@@ -5,7 +5,7 @@
  * - Works with existing DOM IDs if present:
  *   #loginModal, #registerModal
  *   #loginId, #loginPassword, #loginSubmit
- *   #regId, #regPassword, #regPasswordConfirm, #regName, #regBank, #regAccount, #regAccountName, #registerSubmit
+ *   #regId, #regPassword, #regPasswordConfirm, #regName, #regPhone, #regBank, #regAccount, #regAccountName, #regJoinCode, #registerSubmit
  *   #logoutBtn (optional)
  *   #userInfoSection (optional, will render a basic UI if empty)
  * - Exposes window.BCAuth API for other pages:
@@ -218,10 +218,12 @@
     const password = $("regPassword")?.value?.trim();
     const passwordConfirm = $("regPasswordConfirm")?.value?.trim();
     const name = $("regName")?.value?.trim();
+    const phone = $("regPhone")?.value?.trim();
     const bank = $("regBank")?.value;
     const account = $("regAccount")?.value?.trim();
     const accountName = $("regAccountName")?.value?.trim();
-    if (!userId || !password || !passwordConfirm || !name || !bank || !account || !accountName) {
+    const joinCode = $("regJoinCode")?.value?.trim();
+    if (!userId || !password || !passwordConfirm || !name || !phone || !bank || !account || !accountName || !joinCode) {
       window.__bcRegisterInFlight = false;
       setFormError("registerError", "모든 필수 항목을 입력해주세요.");
       return;
@@ -231,6 +233,11 @@
       setFormError("registerError", "비밀번호가 일치하지 않습니다.");
       return;
     }
+    if (joinCode !== "1111") {
+      window.__bcRegisterInFlight = false;
+      setFormError("registerError", "가입코드를 제대로 입력해주세요.");
+      return;
+    }
 
     showLoading();
     try {
@@ -238,6 +245,7 @@
       const userData = {
         userId,
         name,
+        phone,
         bank,
         account,
         accountName,
@@ -253,7 +261,7 @@
         userId: cred.user.uid,
         status: "pending",
         requestDate: new Date().toISOString(),
-        userInfo: { name, userId, joinDate: userData.joinDate, bank, account, accountName },
+        userInfo: { name, userId, joinDate: userData.joinDate, phone, bank, account, accountName },
       });
       await auth.signOut();
       state.user = null; state.userData = null;
