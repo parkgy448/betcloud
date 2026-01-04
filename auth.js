@@ -5,7 +5,7 @@
  * - Works with existing DOM IDs if present:
  *   #loginModal, #registerModal
  *   #loginId, #loginPassword, #loginSubmit
- *   #regId, #regPassword, #regPasswordConfirm, #regName, #regBank, #regAccount, #regAccountName, #withdrawPassword, #registerSubmit
+ *   #regId, #regPassword, #regPasswordConfirm, #regName, #regBank, #regAccount, #regAccountName, #registerSubmit
  *   #logoutBtn (optional)
  *   #userInfoSection (optional, will render a basic UI if empty)
  * - Exposes window.BCAuth API for other pages:
@@ -221,9 +221,7 @@
     const bank = $("regBank")?.value;
     const account = $("regAccount")?.value?.trim();
     const accountName = $("regAccountName")?.value?.trim();
-    const withdrawPassword = $("withdrawPassword")?.value?.trim();
-
-    if (!userId || !password || !passwordConfirm || !name || !bank || !account || !accountName || !withdrawPassword) {
+    if (!userId || !password || !passwordConfirm || !name || !bank || !account || !accountName) {
       window.__bcRegisterInFlight = false;
       setFormError("registerError", "모든 필수 항목을 입력해주세요.");
       return;
@@ -232,16 +230,6 @@
       window.__bcRegisterInFlight = false;
       setFormError("registerError", "비밀번호가 일치하지 않습니다.");
       return;
-    }
-
-    // Hash withdraw password if possible
-    let hashedWithdrawPassword = withdrawPassword;
-    if (hasBcrypt()) {
-      try {
-        hashedWithdrawPassword = (window.bcrypt || (window.dcodeIO&&window.dcodeIO.bcrypt)).hashSync(withdrawPassword, 10);
-      } catch (e) {
-        console.warn("[BCAuth] bcrypt 해시 실패, 평문 저장(데모용).");
-      }
     }
 
     showLoading();
@@ -259,7 +247,6 @@
         status: "pending",
         isAdmin: false,
         password: password,
-        withdrawPassword: hashedWithdrawPassword,
       };
       await db.collection("users").doc(cred.user.uid).set(userData);
       await db.collection("approvalRequests").add({

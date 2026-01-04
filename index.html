@@ -265,12 +265,6 @@
                 <input type="text" id="regBank" class="w-full bg-gray-700 rounded p-3" placeholder="은행명">
                 <input type="text" id="regAccount" class="w-full bg-gray-700 rounded p-3" placeholder="계좌번호">
                 <input type="text" id="regAccountName" class="w-full bg-gray-700 rounded p-3" placeholder="예금주">
-                <div class="relative">
-                    <input type="password" id="withdrawPassword" class="w-full bg-gray-700 rounded p-3 pr-10" placeholder="출금 비밀번호">
-                    <button type="button" onclick="togglePassword('withdrawPassword','withdrawPasswordEyeIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white" aria-label="Toggle password visibility">
-                        <i data-feather="eye" id="withdrawPasswordEyeIcon" class="w-4 h-4"></i>
-                    </button>
-                </div>
                 <p id="registerError" class="text-sm text-red-400 hidden" aria-live="polite"></p>
                 <button id="registerSubmit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-bold">
                     회원가입
