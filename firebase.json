@@ -7,5 +7,20 @@
       "firebase-debug.log",
       "firebase-debug.*.log"
     ]
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "README.md",
+      "functions/**",
+      "node_modules/**",
+      "test.html",
+      "index_backup.html",
+      ".git/**",
+      ".github/**"
+    ],
+    "cleanUrls": true
   }
 }
